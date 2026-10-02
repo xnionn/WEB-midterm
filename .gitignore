@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+artifacts/
+deliverables/
+tmp/
+tools
+.DS_Store
+*.log

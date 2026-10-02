@@ -1,0 +1,37 @@
+[
+  {
+    "file": "assets/vendor/bootstrap.min.css",
+    "source": "https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/dist/css/bootstrap.min.css",
+    "sha256": "d85327d99c7a3ee1f9b5d0500d1370acea3ad2db39c163c2f51f232baedbdede"
+  },
+  {
+    "file": "assets/vendor/bootstrap.bundle.min.js",
+    "source": "https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/dist/js/bootstrap.bundle.min.js",
+    "sha256": "e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7"
+  },
+  {
+    "file": "assets/vendor/LICENSE-bootstrap.txt",
+    "source": "https://raw.githubusercontent.com/twbs/bootstrap/v5.3.8/LICENSE",
+    "sha256": "4620c84ad5ce8602ff65640ed6b7c8b78ebb9e036584f0ebc1ccc88206a4bb51"
+  },
+  {
+    "file": "assets/fonts/space-grotesk-latin-variable.woff2",
+    "source": "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mDoQDjQSkFtoMM3T6r8E7mPbF4Cw.woff2",
+    "sha256": "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d"
+  },
+  {
+    "file": "assets/fonts/LICENSE-space-grotesk.txt",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/spacegrotesk/OFL.txt",
+    "sha256": "564ce565c371c5e5bbf286006565a7c9aa55a9f56e7ca58d56e05d649dd61a72"
+  },
+  {
+    "file": "assets/fonts/dm-sans-latin-variable.woff2",
+    "source": "https://fonts.gstatic.com/s/dmsans/v17/rP2Yp2ywxg089UriI5-g4vlH9VoD8Cmcqbu0-K4.woff2",
+    "sha256": "9fea608a947e67020c33cad9a6fe3d60c54119dfb8cff87768a8117a15ed7543"
+  },
+  {
+    "file": "assets/fonts/LICENSE-dm-sans.txt",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/OFL.txt",
+    "sha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1"
+  }
+]
