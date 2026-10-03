@@ -45,14 +45,3 @@ Install Python Playwright and Chromium if needed: `python -m pip install playwri
 4. Put the actual repository URL and deployed URL in the report. Every team member must commit their own contribution, submit the same report and defend their code.
 
 The report cannot be submitted until team identities, verified contributions and both working URLs are filled in. `docs/SUBMISSION.md` records the remaining details and `docs/defense-guide.md` provides practice questions.
-
-## Credits
-
-Original layout, CSS, page content and vector illustrations were developed with AI assistance for this project. No downloaded template or theme was used. Students must review, customize and be able to explain all submitted code; assistance does not establish a student's contribution.
-
-- [Bootstrap 5.3.8](https://getbootstrap.com/docs/5.3/getting-started/introduction/), MIT. License in `assets/vendor/LICENSE-bootstrap.txt`.
-- [Space Grotesk](https://fonts.google.com/specimen/Space+Grotesk), Florian Karsten, SIL Open Font License.
-- [DM Sans](https://fonts.google.com/specimen/DM+Sans), Colophon Foundry, SIL Open Font License.
-- Font licenses, download sources and checksums are included with the local assets.
-
-Source files are intentionally readable rather than minified. Only third-party vendor files are minified.
