@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OFFLINE is a little invitation to put your phone down, make something and meet people in Astana.">
+  <title>OFFLINE — Make room for real</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <!-- Bootstrap comes first; our stylesheet customizes its appearance. -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <header class="site-header">
+    <nav class="navbar navbar-expand-lg" aria-label="Main navigation">
+      <div class="container">
+        <a class="navbar-brand" href="#hero" aria-label="OFFLINE home">OFFLINE<span aria-hidden="true">✳</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="menu-label">Menu</span><span class="navbar-toggler-icon" aria-hidden="true"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="mainNavigation">
+          <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-4 py-3 py-lg-0">
+            <li class="nav-item"><a class="nav-link" href="#rituals">Small rituals</a></li>
+            <li class="nav-item"><a class="nav-link" href="#gatherings">At the table</a></li>
+            <li class="nav-item"><a class="nav-link" href="#guide">First time?</a></li>
+          </ul>
+          <span class="nav-location d-none d-lg-block ms-lg-5">ASTANA / EST. 2026</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content" tabindex="-1">
+    <!-- TASK 2: Bootstrap columns stack in source order, then swap at lg. -->
+    <section class="hero section-space" id="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="row align-items-center g-4 g-lg-5">
+          <div class="hero-copy col-12 col-lg-6 order-1 order-lg-2">
+            <p class="eyebrow mb-3">A little club for real life</p>
+            <h1 id="hero-title">Less scrolling.<br>More <span>showing up.</span></h1>
+            <p class="hero-description mt-4 mb-4">A pencil, a game, a good conversation. Make a little room for the things a screen can’t give you.</p>
+            <div class="d-flex flex-wrap gap-3 align-items-center">
+              <a class="btn btn-offline" href="#gatherings">Find your kind of evening <span aria-hidden="true">↗</span></a>
+              <a class="quiet-link" href="#rituals">Start with ten minutes</a>
+            </div>
+            <p class="hero-note d-none d-md-block mt-4 mb-0" id="desktop-note">No experience. No perfect work. Just you.</p>
+          </div>
+          <div class="hero-art col-12 col-lg-6 order-2 order-lg-1">
+            <figure class="club-poster mb-0" aria-label="An orange OFFLINE poster: Make room for real. Less screen time, more good company.">
+              <div class="poster-label d-flex justify-content-between"><span>OFFLINE CLUB</span><span>ISSUE 01</span></div>
+              <p class="poster-title mb-0" aria-hidden="true">MAKE ROOM<br>FOR REAL.</p>
+              <svg class="poster-symbol" viewBox="0 0 400 150" fill="none" aria-hidden="true">
+                <path d="M10 138V83a65 65 0 0 1 130 0v55H10Z" fill="currentColor"/>
+                <path d="M75 34v99M27 83h96M41 49l69 68M41 117l69-68" stroke="#f45d32" stroke-width="10"/>
+                <circle cx="75" cy="83" r="18" fill="currentColor"/>
+                <path d="M164 17h67v121h-67zM255 17h27v121h-27zM304 17h15v121h-15zM342 17h8v121h-8zM373 17h4v121h-4z" fill="currentColor"/>
+              </svg>
+              <figcaption class="poster-label d-flex justify-content-between"><span>LESS SCREEN TIME</span><span>MORE GOOD COMPANY ↗</span></figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASK 1: every class inside this section belongs to our own CSS. -->
+    <section class="rituals" id="rituals" aria-labelledby="rituals-title">
+      <div class="ritual-shell">
+        <div class="ritual-heading">
+          <p class="ritual-kicker">01 / Start small</p>
+          <h2 id="rituals-title">Ten minutes.<br>A different kind of break.</h2>
+          <p class="ritual-intro">No booking, no special kit. Borrow one of these for the space between your classes.</p>
+        </div>
+        <div class="ritual-grid">
+          <article class="ritual">
+            <p class="ritual-number">01 <span>/ LOOK</span></p>
+            <h3>Draw a bad chair.</h3>
+            <p>Pick something nearby. Draw it without erasing. The point is to notice, not to impress.</p>
+            <p class="ritual-material">A pencil + any scrap of paper</p>
+          </article>
+          <article class="ritual">
+            <p class="ritual-number">02 <span>/ LISTEN</span></p>
+            <h3>Ask a better question.</h3>
+            <p>“What made you laugh this week?” Put both phones away. Let the answer take its time.</p>
+            <p class="ritual-material">One friend + your full attention</p>
+          </article>
+          <article class="ritual">
+            <p class="ritual-number">03 <span>/ WANDER</span></p>
+            <h3>Take the long way.</h3>
+            <p>Walk a familiar route. Find three things you have never noticed. No photos required.</p>
+            <p class="ritual-material">Comfortable shoes + curiosity</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASK 2: col-12 / col-md-6 / col-lg-4 gives 1 / 2 / 3 cards. -->
+    <section class="gatherings section-space" id="gatherings" aria-labelledby="gatherings-title">
+      <div class="container">
+        <div class="row align-items-end mb-4 g-3">
+          <div class="col-12 col-lg-8">
+            <p class="eyebrow mb-3">02 / Find your people</p>
+            <h2 id="gatherings-title" class="mb-0">Next around the table.</h2>
+          </div>
+          <div class="col-12 col-lg-4 text-lg-end"><p class="section-caption mb-0">Three ways to spend a good evening.<br>All beginners welcome.</p></div>
+        </div>
+        <div class="session-grid row g-4">
+          <div class="col-12 col-md-6 col-lg-4">
+            <article class="card session-card h-100">
+              <div class="session-art print-art" aria-hidden="true">
+                <svg viewBox="0 0 320 125" fill="none"><path d="M110 112V61a50 50 0 0 1 100 0v51H110Z" fill="currentColor"/><path d="M160 24v78M122 63h76M133 36l54 54M133 90l54-54" stroke="#e8e4d8" stroke-width="9"/></svg>
+                <span>MAKE / 01</span>
+              </div>
+              <div class="card-body d-flex flex-column p-4">
+                <p class="session-date mb-2">FRI 16 OCT · 18:30</p>
+                <h3 class="card-title">Ink on your hands.</h3>
+                <p class="card-text">Roll some ink. Make your first print. Slightly wonky is the whole point.</p>
+                <p class="session-detail mt-auto mb-0">90 minutes · Materials provided</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4">
+            <article class="card session-card h-100">
+              <div class="session-art game-art" aria-hidden="true">
+                <svg viewBox="0 0 320 125" fill="none"><rect x="94" y="20" width="86" height="86" rx="5" stroke="currentColor" stroke-width="3"/><circle cx="117" cy="43" r="6" fill="currentColor"/><circle cx="157" cy="43" r="6" fill="currentColor"/><circle cx="137" cy="63" r="6" fill="currentColor"/><circle cx="117" cy="83" r="6" fill="currentColor"/><circle cx="157" cy="83" r="6" fill="currentColor"/><circle cx="214" cy="79" r="24" stroke="currentColor" stroke-width="3"/><path d="M198 78h32M214 63v31" stroke="currentColor" stroke-width="3"/></svg>
+                <span>PLAY / 02</span>
+              </div>
+              <div class="card-body d-flex flex-column p-4">
+                <p class="session-date mb-2">FRI 23 OCT · 18:30</p>
+                <h3 class="card-title">One more round.</h3>
+                <p class="card-text">Easy rules, new faces and a shared table. We’ll explain the game as we go.</p>
+                <p class="session-detail mt-auto mb-0">90 minutes · Come on your own</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-12 col-md-6 col-lg-4">
+            <article class="card session-card h-100">
+              <div class="session-art walk-art" aria-hidden="true">
+                <svg viewBox="0 0 320 125" fill="none"><path d="M85 107c0-49 65-18 65-51s70-47 84-35M115 107c0-26 65-8 65-48s29-16 54-8" stroke="currentColor" stroke-width="3"/><circle cx="97" cy="39" r="15" fill="currentColor"/><path d="m220 90 8-15 8 15h-16Zm8 0v17" stroke="currentColor" stroke-width="3"/></svg>
+                <span>NOTICE / 03</span>
+              </div>
+              <div class="card-body d-flex flex-column p-4">
+                <p class="session-date mb-2">SAT 24 OCT · 11:00</p>
+                <h3 class="card-title">The slower route.</h3>
+                <p class="card-text">A small walk with no step target. Collect a few details you usually pass by.</p>
+                <p class="session-detail mt-auto mb-0">45 minutes · Dress for the weather</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="guide section-space" id="guide" aria-labelledby="guide-title">
+      <div class="container">
+        <div class="row g-4 g-lg-5">
+          <div class="col-12 col-lg-5">
+            <p class="eyebrow mb-3">03 / Pull up a chair</p>
+            <h2 id="guide-title">First time?<br>You’ll fit right in.</h2>
+            <p class="guide-intro mt-3 mb-0">You don’t need a talent, a group of friends or a good reason. Being curious is enough.</p>
+          </div>
+          <div class="col-12 col-lg-7">
+            <div class="accordion" id="guideAccordion">
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#answer-alone" aria-expanded="true" aria-controls="answer-alone">Can I come on my own?</button>
+                </h3>
+                <div id="answer-alone" class="accordion-collapse collapse show" data-bs-parent="#guideAccordion">
+                  <div class="accordion-body">Absolutely. Start with a hello and take a seat at the shared table. The activity gives you something to talk about.</div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#answer-bring" aria-expanded="false" aria-controls="answer-bring">What should I bring?</button>
+                </h3>
+                <div id="answer-bring" class="accordion-collapse collapse" data-bs-parent="#guideAccordion">
+                  <div class="accordion-body">For a table session, just yourself. Paper, ink and games are provided. For a walk, wear comfortable shoes and bring a warm layer.</div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h3 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#answer-phone" aria-expanded="false" aria-controls="answer-phone">Do I have to switch off my phone?</button>
+                </h3>
+                <div id="answer-phone" class="accordion-collapse collapse" data-bs-parent="#guideAccordion">
+                  <div class="accordion-body">No strict rules. Keep it tucked away when you can, and step out whenever you need to take a call. Attention is an invitation, not a test.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer py-4">
+    <div class="container">
+      <div class="row gy-3 align-items-center">
+        <div class="col-12 col-md-4"><a class="footer-brand" href="#hero">OFFLINE<span aria-hidden="true">✳</span></a><p class="mb-0 mt-2">Make room for real.</p></div>
+        <div class="col-12 col-md-8 text-md-end"><p class="mb-1">Alimzhan Almukhambetov · IT-2510</p><p class="footer-note mb-0">Assignment 3 · Student club concept · 2026</p></div>
+      </div>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  <script src="script.js"></script>
+</body>
+</html>
