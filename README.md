@@ -4,6 +4,8 @@ A six-page website for **WEB Technologies 1 (Front End), Midterm Project**. OFFL
 
 [Published website](https://xnionn.github.io/WEB-midterm/) · [GitHub repository](https://github.com/xnionn/WEB-midterm)
 
+Alimzhan Almukhambetov's individual Assignment 3 (IT-2510) is kept separately in [`assignment3/`](assignment3/README.md), with its own one-page website, report and verification evidence. [Open Assignment 3](https://xnionn.github.io/WEB-midterm/assignment3/).
+
 ## Run the website
 
 Open `index.html` in a browser, or run `python -m http.server 8000` from the repository and visit `http://localhost:8000`. A local server gives the planner a consistent browser-storage origin.
