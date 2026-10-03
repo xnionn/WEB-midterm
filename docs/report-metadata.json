@@ -1,0 +1,34 @@
+{
+  "report_date": "3 October 2026",
+  "group": "",
+  "members": [
+    {
+      "full_name": "Alimzhan Almukhambetov",
+      "pages": ["index", "about"],
+      "contribution": "Home and The club pages: semantic structure, noticeboard hero, club principles, Bootstrap FAQ accordion and responsive page styling. Shared responsibility: navigation, footer, typography and final design integration."
+    },
+    {
+      "full_name": "Azamat Bukharbaev",
+      "pages": ["gatherings"],
+      "contribution": "Gatherings page: event cards, category filters, accessible filter states and live count, semantic timetable, customized Bootstrap table and responsive layouts. Shared responsibility: check all pages at 375, 768 and 1280 px."
+    },
+    {
+      "full_name": "Dias Shamel",
+      "pages": ["fieldnotes", "toolkit"],
+      "contribution": "Field notes and The toolkit pages: editorial layout, expandable notes, original paper illustration, customized Bootstrap supply checkboxes, downloadable activity guide and print stylesheet. Shared responsibility: content consistency and asset credits."
+    },
+    {
+      "full_name": "Tamerlan Aitpayev",
+      "pages": ["join"],
+      "contribution": "Make a plan page: Bootstrap grid and form controls, labels and validation, local save/restore/edit/delete, calendar reminder download, and responsive summary panel. Shared responsibility: interaction, keyboard and invalid-input checks."
+    }
+  ],
+  "allocation_status": "Assigned page ownership and responsibilities; individual commit history must reflect each member's own work.",
+  "repository_url": "https://github.com/xnionn/WEB-midterm",
+  "deployed_url": "https://xnionn.github.io/WEB-midterm/",
+  "deployment_verified": true,
+  "deployment_verified_at": "3 October 2026, 12:18 UTC+5",
+  "verified_site_commit": "b55e28f",
+  "screenshots_captured": "3 October 2026",
+  "reflection": "OFFLINE brings a screen-free student club into six connected pages with a shared visual style. The implementation combines semantic HTML, a meaningful timetable and form, Bootstrap components, CSS Grid, Flexbox and custom media queries. It demonstrates how reusable design rules keep a multi-page website consistent while each page serves a different purpose. The interactive features connect HTML controls to browser state, validation, accessible feedback and downloadable files. Responsive and keyboard checks show why verification is part of front-end development. The local planner also makes the boundary between a static interface and a real booking service clear; server-side reservations remain a possible extension for the Endterm and Final project."
+}

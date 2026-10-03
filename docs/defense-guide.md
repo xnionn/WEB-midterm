@@ -2,6 +2,75 @@
 
 Sixty of the hundred available points belong to the individual defense. A working website and a polished report do not replace the student's ability to explain and change their own code. Use this guide for practice, then close it while doing the change exercises.
 
+The assigned team is **Alimzhan Almukhambetov, Azamat Bukharbaev, Dias Shamel and Tamerlan Aitpayev**. Follow the page ownership in `docs/team-responsibilities.md`. Prepare to present your own completed changes, explain the source and demonstrate a small edit independently.
+
+## Individual preparation
+
+| Student | Pages to present | Main code evidence |
+| --- | --- | --- |
+| Alimzhan Almukhambetov | Home and About | `content/index.html`, `content/about.html`, shared wrapper in `tools/build_site.py`, home/shared selectors in `assets/css/style.css`, About rules in `content/secondary.css`. |
+| Azamat Bukharbaev | Gatherings | `content/gatherings.html`, gathering/table selectors in `assets/css/style.css`, filter logic at the beginning of `assets/js/script.js`. |
+| Dias Shamel | Field notes and Toolkit | `content/fieldnotes.html`, `content/toolkit.html`, journal/toolkit/print rules in `content/secondary.css`, `assets/print-guide.txt`, `[data-print-guide]` handler in `assets/js/script.js`. |
+| Tamerlan Aitpayev | Make a plan | `content/join.html`, planner/form selectors in `assets/css/style.css`, planner block in `assets/js/script.js`. |
+
+### Alimzhan: the introduction and club identity
+
+Show how the Home noticeboard attracts a student visitor and how About explains the same idea in a different layout. Point to `.home-hero`, `.hero-board`, `.manifesto-list` and `.about-faq`; identify a custom breakpoint that changes their arrangement. Explain the paper/ink/orange palette, both font families and why artwork is labelled rather than used as an inaccessible image of essential text.
+
+On About, explain the Bootstrap `row`, `col-lg-5` and `col-lg-7` process layout. Trace one accordion button to its panel ID, including `data-bs-toggle`, `data-bs-target`, `aria-controls` and `data-bs-parent`. Identify the custom CSS that changes the Bootstrap accordion's appearance. Explain how the shared navbar/footer are generated and why changing a fragment requires rebuilding the root page.
+
+Practice change prompts, without following a prepared solution:
+
+1. Add a fifth FAQ with its own working collapse panel; prove the new IDs and targets do not interfere with an existing question.
+2. Change the Home poster wording while preserving legibility and layout at all three required widths.
+3. Change the mobile spacing of the manifesto and explain why the desktop layout is unaffected.
+
+Teammate check: explain how Azamat's gathering link selects Tamerlan's planner option, and why the visible event details must agree between the two pages.
+
+### Azamat: choosing an evening
+
+Present the three gathering illustrations, their category controls and the timetable. Explain why `.session-grid` is a CSS Grid layout but the timetable is a semantic `table`. Point to its `caption`, `thead`, `tbody`, `th scope="col"` and `th scope="row"`. Show how `.rhythm-table` changes Bootstrap's `.table` colours and spacing.
+
+Trace a filter click from the button's `data-filter` to each entry's `data-category`. Explain the `all` condition, `hidden`, visible count and `aria-pressed`. Filtering examines each card once, and updates each filter button once: its work is O(C + F) for C cards and F filter buttons. The three event links use known session keys rather than a real booking service.
+
+Practice change prompts:
+
+1. Add a sensible timetable row and preserve the correct column and row headers.
+2. Rename a visible category button without breaking the category matching or pressed state.
+3. Adjust the tablet spacing between gatherings while preserving a readable phone layout and visible count.
+
+Teammate check: compare Alimzhan's Bootstrap FAQ with Dias's native `details` notes. Explain which script or browser behaviour changes each disclosure's state.
+
+### Dias: reading, then making
+
+Present the editorial feature, paper illustration and three expandable notes. Explain the `article` structure, `.journal-feature` grid, `.journal-art` positioning, and `details`/`summary`. Show how the `[open]` selector changes the plus sign without an extra script. Keyboard activation and native disclosure behaviour should still work when JavaScript is disabled.
+
+On Toolkit, show the checklist's Bootstrap `.form-check`, `.form-check-input` and `.form-check-label` structure and the scoped `.material-list` styling. Explain how linked labels activate their inputs and how checked state and visible keyboard focus are styled. Trace the actual `assets/print-guide.txt` download and the `[data-print-guide]` handler. Show print preview and identify the `@media print` rules that remove navigation/decorative sections and keep the worksheet readable. The checklist is a preparation aid; it is not submitted to a server or stored across reloads.
+
+Practice change prompts:
+
+1. Add one expandable note in the established editorial style and keep its summary keyboard-accessible.
+2. Revise one activity instruction consistently in the on-page guide and downloaded text file.
+3. Add a fifth labelled checklist item with a working checkbox and matching checked/focus styling.
+
+Teammate check: explain what Tamerlan saves in local storage, why the name is displayed with `textContent`, and why a calendar reminder is not a reserved place.
+
+### Tamerlan: a local personal planner
+
+Present the form and its saved summary. Identify labels, input types, `required`, `maxlength`, numeric bounds, radio grouping and the sample-event acknowledgement. Show the Bootstrap `row`, `col-md-8`, `col-md-4`, `.form-control`, `.form-select` and `.form-check` elements and the project's custom overrides.
+
+Trace submission through `preventDefault`, trimming, custom validity, `reportValidity`, the plan object and storage. Then explain `readPlan`, `fillForm`, `showPlan`, edit and delete. Demonstrate a reload, invalid input and the honest message shown when storage is unavailable. Explain why client-side validation helps this prototype but would not enforce real booking rules on a server.
+
+Trace a query-selected session and one calendar download. Explain the fixed sample session data, UTC `Z` times, `Blob`, temporary object URL, tentative status and URL cleanup. The session lookup has fixed small size here; the form and saved summary contain a fixed number of fields. Calendar construction works over a fixed set of lines, not all website visitors.
+
+Practice change prompts:
+
+1. Display the already stored first-time preference in the saved-plan summary and preserve correct editing/reloading behaviour.
+2. Reduce the maximum party size from four to three consistently, including validation, restored-data checks and visitor copy.
+3. Change the saved-plan status wording and show that it still announces the correct save, download or storage-failure state.
+
+Teammate check: explain how Alimzhan's wrapper keeps every page's navigation consistent, and how Dias's print stylesheet changes only paper output.
+
 ## Explain your part in a short presentation
 
 Start with the visitor: a student who wants a low-pressure, screen-free evening. Open the page you actually built, explain its purpose and show its mobile version. Explain one layout decision, one semantic HTML choice and one interaction that belongs to your work. Name the files you changed and explain how your page shares navigation, typography and spacing with the other pages.

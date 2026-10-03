@@ -1,34 +1,41 @@
-# OFFLINE midterm submission
+﻿# OFFLINE midterm submission
 
-The website has six pages, enough for a team of up to four students. Every member still needs to build and understand at least one complete page and commit their own work to the shared repository. Do not list someone as the author of work they did not do.
+The completed report is `deliverables/Midterm_Alimzhan_Almukhambetov_Azamat_Bukharbaev_Dias_Shamel_Tamerlan_Aitpayev.pdf`. It includes the four team members, assigned page responsibilities, topic and style rationale, implementation, conclusion, credits and all six pages at 375, 768 and 1280 px.
 
-The PDF in `deliverables/` is a draft until the real team, contributions, public links and reflection are supplied. The course requires both the repository URL and published website URL; a report without them receives zero.
+- Repository: [xnionn/WEB-midterm](https://github.com/xnionn/WEB-midterm)
+- Published website: [OFFLINE Club](https://xnionn.github.io/WEB-midterm/)
 
-1. Each student reviews, adapts and commits their own page. Keep a comparable contribution for every team member.
-2. Upload all website source to one GitHub repository. Generated root HTML, `assets/`, `content/`, the build script, licenses and credits belong in the source.
-3. Publish through GitHub Pages. In repository **Settings → Pages**, choose deployment from the `main` branch and `/ (root)` folder, or use the repository's Pages workflow if one is present.
-4. Open the public URL and follow every navigation link. Confirm that CSS, local fonts, Bootstrap, images and JavaScript load beneath the repository path. Check 375, 768 and 1280 px again on the deployed version.
-5. Copy `docs/report-metadata.example.json` to `docs/report-metadata.json` and fill it with real information. The group field is optional. Example schema:
+Both links were verified on 3 October 2026. The six live pages and their local assets returned successfully and matched the website source. Browser audits of both the local and published website passed all 18 page/width combinations and 21 visitor checks.
 
-```json
-{
-  "members": [
-    {
-      "full_name": "Actual Full Name",
-      "contribution": "Pages actually built, styling and interactions actually completed"
-    }
-  ],
-  "repository_url": "https://github.com/actual-owner/actual-repository",
-  "deployed_url": "https://actual-owner.github.io/actual-repository/",
-  "reflection": "Your own short conclusion about what you built and learned."
-}
+## Page ownership and responsibilities
+
+| Team member | Complete pages | Additional responsibility |
+| --- | --- | --- |
+| Alimzhan Almukhambetov | Home and The club | Shared navigation, footer, typography and design integration |
+| Azamat Bukharbaev | Gatherings | Timetable, filters and responsive checks across the website |
+| Dias Shamel | Field notes and The toolkit | Expandable notes, Bootstrap supplies checklist, print/download and content credits |
+| Tamerlan Aitpayev | Make a plan | Validation, local storage, calendar download and interaction checks |
+
+The 2/1/2/1 page split balances page count with the deeper filter/timetable and planner work. Each page owner is responsible for its semantic HTML, responsive styling, applicable Bootstrap components and defense explanation. Each student is responsible for completing, testing and committing their assigned pages under their own GitHub account.
+
+## Before submission
+
+1. Each student reviews, adapts and understands their assigned pages, and commits their own work through their own account in the shared repository. Keep actual contribution records accurate.
+2. Read the complete PDF and check the four names and responsibility table. If any allocation changes, update `docs/report-metadata.json` and regenerate the report.
+3. Open both public links and follow the navigation before submitting. Website changes should be published and checked again at the three required widths.
+4. Every team member submits the same PDF before the actual course deadline and attends the individual defense. Use `docs/defense-guide.md` to practice explanations and small changes without assistance.
+
+The required report format is `.docx` or `.pdf`; do not submit this Markdown checklist in its place.
+
+## Regenerate the report
+
+Install the PDF dependencies with `python -m pip install -r tools/requirements-report.txt`. After final website changes, run `python tools/test_site.py` to refresh the local checks and screenshots, or retain a verified hosted screenshot set in `artifacts/deployed/screenshots`. Then run:
+
+```powershell
+python tools/build_report.py --screenshots artifacts/deployed/screenshots
 ```
 
-6. Install the report dependencies with `python -m pip install -r tools/requirements-report.txt`. Regenerate the report after the final screenshots and metadata: `python tools/build_report.py`. It produces `Midterm_Full_Name_....pdf` only when all metadata is present; otherwise it retains `DRAFT` in the filename.
-7. Read the complete PDF. It contains all six pages at all three required widths. Submit the same PDF for every team member before the actual course deadline.
-8. Every student attends the individual defense. Use `docs/defense-guide.md` to practice explaining the code and making changes independently.
-
-Do not submit this Markdown checklist instead of the PDF. The required submission format is `.docx` or `.pdf`.
+The generator reads the names, page ownership, project links and conclusion from `docs/report-metadata.json`. It uses the full team names in the filename. A live URL is treated as verified only when `deployment_verified` is true; update that field after checking the actual public website. Rendered page images are kept under `tmp/report-qa` for visual review.
 
 ## Source and content credits
 

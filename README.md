@@ -2,6 +2,8 @@
 
 A six-page website for **WEB Technologies 1 (Front End), Midterm Project**. OFFLINE is a fictional student club for screen-free creative evenings in Astana. The audience is students who want to meet people without needing previous creative experience.
 
+[Published website](https://xnionn.github.io/WEB-midterm/) · [GitHub repository](https://github.com/xnionn/WEB-midterm)
+
 ## Run the website
 
 Open `index.html` in a browser, or run `python -m http.server 8000` from the repository and visit `http://localhost:8000`. A local server gives the planner a consistent browser-storage origin.
@@ -18,6 +20,19 @@ The delivered root HTML files are complete static pages. There is no application
 | `fieldnotes.html` | Give creative ideas | Editorial notebook layout and expandable stories |
 | `toolkit.html` | Try an activity at home | Printable four-panel guide and real text download |
 | `join.html` | Make a personal event plan | Validated form, local save/edit/delete and calendar download |
+
+## Team and page ownership
+
+| Student | Complete pages | Main responsibilities |
+| --- | --- | --- |
+| Alimzhan Almukhambetov | Home, The club | Noticeboard hero, club story, Bootstrap FAQ, shared navigation and design integration |
+| Azamat Bukharbaev | Gatherings | Event cards, category filters, Bootstrap timetable and responsive checks |
+| Dias Shamel | Field notes, The toolkit | Editorial notes, Bootstrap checklist, activity download and print layout |
+| Tamerlan Aitpayev | Make a plan | Form validation, local storage, saved-plan editing and calendar download |
+
+The two interactive pages carry more JavaScript work, balancing the two-page content assignments. Each owner is responsible for the complete HTML, CSS, Bootstrap styling, responsiveness and relevant interactions of their pages. See [the detailed team plan](docs/team-responsibilities.md) and [individual defense exercises](docs/defense-guide.md).
+
+The shared submission is the [team report PDF](deliverables/Midterm_Alimzhan_Almukhambetov_Azamat_Bukharbaev_Dias_Shamel_Tamerlan_Aitpayev.pdf).
 
 ## Editing
 
@@ -44,4 +59,4 @@ Install Python Playwright and Chromium if needed: `python -m pip install playwri
 3. Wait for the deployment to finish. Open the deployed site and verify all six pages and local assets. Relative links work under a repository subpath.
 4. Put the actual repository URL and deployed URL in the report. Every team member must commit their own contribution, submit the same report and defend their code.
 
-The report cannot be submitted until team identities, verified contributions and both working URLs are filled in. `docs/SUBMISSION.md` records the remaining details and `docs/defense-guide.md` provides practice questions.
+Report identities, page ownership and project links are maintained in `docs/report-metadata.json`. Each student must complete and commit their own assigned work, submit the same report and attend the individual defense. See `docs/SUBMISSION.md` for the submission steps.
