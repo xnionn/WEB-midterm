@@ -1,6 +1,0 @@
-reportlab>=5.0.1,<6
-pillow>=12.3,<13
-fonttools>=4.66,<5
-brotli>=1.2,<2
-pypdf>=6.19,<7
-pymupdf>=1.28,<2
