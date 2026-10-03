@@ -85,9 +85,12 @@
 .kit-workspace { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.7fr); gap: 6%; align-items: start; }
 .material-list { border: 0; padding: 0; margin: 1.75rem 0 1rem; }
 .material-list legend { font-size: .75rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: .5rem; }
-.material-list label { display: flex; align-items: center; gap: .7rem; min-height: 44px; cursor: pointer; font-size: .92rem; }
-.material-list input { width: 1.1rem; height: 1.1rem; accent-color: #24251f; flex-shrink: 0; }
-.material-list input:checked + span { color: #62645a; text-decoration: line-through; }
+.material-list .form-check { display: flex; align-items: center; gap: .7rem; min-height: 44px; margin: 0; padding: 0; }
+.material-list .form-check-label { display: flex; align-items: center; min-height: 44px; flex: 1; cursor: pointer; font-size: .92rem; }
+.material-list .form-check-input { width: 1.1rem; height: 1.1rem; float: none; margin: 0 !important; flex-shrink: 0; cursor: pointer; border-color: #898b7c; }
+.material-list .form-check-input:checked { background-color: #24251f; border-color: #24251f; }
+.material-list .form-check-input:focus-visible { outline: 3px solid #9d350f; outline-offset: 4px; box-shadow: none; }
+.material-list input:checked + label span { color: #62645a; text-decoration: line-through; }
 .kit-prep > .meta { max-width: 20rem; }
 .print-kit-button { margin-top: .75rem; }
 .printable-kit { background: #fbf9f1; border: 1px solid #bfc1b3; padding: 2rem; }
