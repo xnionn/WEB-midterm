@@ -5,3 +5,4 @@ tmp/
 tools
 .DS_Store
 *.log
+docs/
