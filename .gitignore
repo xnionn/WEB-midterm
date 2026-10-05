@@ -2,7 +2,7 @@ __pycache__/
 .venv/
 artifacts/
 tmp/
-tools
+tools/
 .DS_Store
 *.log
 docs/
