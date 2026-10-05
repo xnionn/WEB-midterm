@@ -1,7 +1,0 @@
-# Python dependencies used to build and inspect the PDF report.
-reportlab==5.0.1
-Pillow==12.3.0
-fonttools==4.66.1
-brotli==1.2.0
-PyMuPDF==1.28.2
-pypdf==6.19.0
