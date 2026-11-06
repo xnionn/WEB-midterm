@@ -1,0 +1,285 @@
+/* Shared form, feedback and state components used by every page.
+   Built on the tokens in style.css (--paper, --ink, --accent, --line, --white, --muted). */
+
+:root {
+  --error:#a52a12;
+  --error-bg:#fbe9e3;
+  --ok:#2d5a3d;
+  --ok-bg:#e6efe3;
+}
+
+/* ---------- Field errors (written by validation.js) ---------- */
+.field-error {
+  color:var(--error);
+  font-size:12px;
+  font-weight:500;
+  line-height:1.5;
+  margin:7px 0 0;
+}
+
+.field-error[hidden] {
+  display:none;
+}
+
+.field-error::before {
+  content:'! ';
+  font-weight:700;
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid,
+textarea.form-control.is-invalid {
+  border-color:var(--error);
+  background-image:none;
+  padding-right:14px;
+  box-shadow:none;
+}
+
+.form-select.is-invalid {
+  background-image:var(--bs-form-select-bg-img),var(--bs-form-select-bg-icon,none);
+  padding-right:2.25rem;
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+  border-color:var(--error);
+  box-shadow:0 0 0 3px #a52a1226;
+}
+
+.form-check-input.is-invalid {
+  border-color:var(--error);
+}
+
+.form-check-input.is-invalid ~ .form-check-label {
+  color:var(--error);
+}
+
+textarea.form-control {
+  min-height:120px;
+  resize:vertical;
+}
+
+/* ---------- Success message after a correct submit ---------- */
+.form-success {
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  margin:22px 0 0;
+  padding:16px 18px;
+  background:var(--ok-bg);
+  border:1px solid var(--ok);
+  border-left-width:6px;
+  color:var(--ok);
+  font-size:14px;
+  font-weight:500;
+  line-height:1.55;
+}
+
+.form-success[hidden] {
+  display:none;
+}
+
+.form-success::before {
+  content:'✓';
+  font-weight:700;
+}
+
+/* ---------- Empty result ("nothing found") ---------- */
+.empty-state {
+  border:1px dashed #898b7c;
+  background:var(--white);
+  padding:44px 28px;
+  text-align:center;
+}
+
+.empty-state[hidden] {
+  display:none;
+}
+
+.empty-state h3 {
+  font-family:var(--heading);
+  font-size:26px;
+  letter-spacing:-.04em;
+  margin-bottom:10px;
+}
+
+.empty-state p {
+  color:var(--muted);
+  font-size:14px;
+  margin:0 auto 20px;
+  max-width:420px;
+}
+
+/* ---------- Search field used by the page filters ---------- */
+.search-field {
+  position:relative;
+  flex:1 1 260px;
+  max-width:420px;
+}
+
+.search-field .form-control {
+  padding-left:44px;
+}
+
+.search-field::before {
+  content:'';
+  position:absolute;
+  left:16px;
+  top:50%;
+  width:13px;
+  height:13px;
+  margin-top:-9px;
+  border:2px solid var(--muted);
+  border-radius:50%;
+  pointer-events:none;
+}
+
+.search-field::after {
+  content:'';
+  position:absolute;
+  left:28px;
+  top:50%;
+  width:7px;
+  height:2px;
+  margin-top:5px;
+  background:var(--muted);
+  transform:rotate(45deg);
+  pointer-events:none;
+}
+
+mark.search-hit {
+  background:#f8ae96;
+  color:var(--ink);
+  padding:0 2px;
+}
+
+/* ---------- Toast ---------- */
+.site-toast {
+  position:fixed;
+  left:50%;
+  bottom:28px;
+  transform:translateX(-50%);
+  z-index:1080;
+  max-width:min(92vw,520px);
+  padding:14px 22px;
+  background:var(--ink);
+  color:var(--white);
+  border-left:6px solid var(--accent);
+  font-size:14px;
+  font-weight:500;
+  line-height:1.5;
+  box-shadow:0 12px 30px #24251f33;
+}
+
+.site-toast[hidden] {
+  display:none;
+}
+
+/* ---------- Back to top ---------- */
+.back-to-top {
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  z-index:1000;
+  width:48px;
+  height:48px;
+  background:var(--ink);
+  color:var(--white);
+  border:1px solid var(--ink);
+  border-radius:3px;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.back-to-top[hidden] {
+  display:none;
+}
+
+.back-to-top:hover {
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--ink);
+}
+
+/* ---------- Interactive hover states for cards and buttons ---------- */
+.session-card,
+.journal-note,
+.next-gathering,
+.quiz-card,
+.note-card,
+.pass-card {
+  transition-property:transform,box-shadow,border-color;
+  transition-duration:160ms;
+  transition-timing-function:ease-out;
+}
+
+.session-card:hover,
+.note-card:hover,
+.quiz-card:hover {
+  border-color:var(--ink);
+  box-shadow:6px 6px 0 var(--ink);
+  transform:translate(-3px,-3px);
+}
+
+.button:active,
+.filter-button:active {
+  transform:translateY(1px);
+}
+
+.button:disabled,
+.button[disabled] {
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.filter-button:hover {
+  border-color:var(--ink);
+}
+
+/* ---------- Reveal on scroll (the class is added by core.js) ---------- */
+.is-waiting {
+  opacity:0;
+  transform:translateY(18px);
+}
+
+.is-revealed {
+  opacity:1;
+  transform:none;
+  transition:opacity 420ms ease-out,transform 420ms ease-out;
+}
+
+/* ---------- Result summaries ---------- */
+.result-summary {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 22px;
+  font-size:12px;
+  color:var(--muted);
+  margin:0;
+}
+
+.result-summary strong {
+  color:var(--ink);
+  font-weight:700;
+}
+
+@media(prefers-reduced-motion:reduce) {
+  .is-waiting {
+    opacity:1;
+    transform:none;
+  }
+  .session-card:hover,
+  .note-card:hover,
+  .quiz-card:hover {
+    transform:none;
+  }
+}
+
+@media print {
+  .site-toast,
+  .back-to-top {
+    display:none!important;
+  }
+}
+

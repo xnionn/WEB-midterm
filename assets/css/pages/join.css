@@ -1,0 +1,280 @@
+/* Make a plan / Join page styles: wizard, basket, password meter and Offline Pass */
+
+/* Wizard Navigation Tabs */
+.wizard-steps {
+  border-bottom:1px solid var(--line);
+  padding-bottom:12px;
+}
+
+.wizard-step-btn {
+  background:transparent;
+  border:0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-family:var(--heading);
+  font-size:14px;
+  color:var(--muted);
+  cursor:pointer;
+  padding:6px 12px;
+  border-radius:2px;
+  transition:color 150ms ease,background-color 150ms ease;
+}
+
+.wizard-step-btn .step-num {
+  font-weight:700;
+  font-size:12px;
+  background:var(--line);
+  color:var(--ink);
+  padding:2px 6px;
+  border-radius:2px;
+}
+
+.wizard-step-btn.active {
+  color:var(--ink);
+  font-weight:700;
+}
+
+.wizard-step-btn.active .step-num {
+  background:var(--ink);
+  color:var(--white);
+}
+
+/* Evening Selection Cards */
+.planner-evenings-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
+}
+
+.planner-choice-card {
+  background:var(--white);
+  border:1px solid var(--line);
+  display:flex;
+  border-radius:2px;
+  overflow:hidden;
+  transition:border-color 150ms ease,box-shadow 150ms ease;
+}
+
+.planner-choice-card .session-art {
+  width:140px;
+  min-height:auto;
+  padding:15px;
+  flex-shrink:0;
+}
+
+.planner-choice-card .print-art {
+  width:90px;
+  padding:10px;
+}
+
+.planner-choice-card .dice-art {
+  width:110px;
+  height:90px;
+}
+
+.planner-choice-card.is-chosen {
+  border-color:var(--accent);
+  box-shadow:4px 4px 0 var(--accent);
+}
+
+/* Basket summary card */
+.basket-summary-card {
+  background:var(--paper);
+  border:2px solid var(--ink);
+  padding:22px 26px;
+  border-radius:0;
+}
+
+.basket-title {
+  font-family:var(--heading);
+  font-size:20px;
+  letter-spacing:-.03em;
+  margin-bottom:12px;
+}
+
+.basket-items-list {
+  list-style:none;
+  padding:0;
+  margin:0 0 16px;
+}
+
+.empty-basket-note {
+  color:var(--muted);
+  font-size:13px;
+  font-style:italic;
+  padding:8px 0;
+}
+
+.btn-remove-basket-item {
+  background:transparent;
+  border:0;
+  color:var(--error);
+  font-size:12px;
+  cursor:pointer;
+  padding:4px 8px;
+}
+
+.btn-remove-basket-item:hover {
+  text-decoration:underline;
+}
+
+.basket-stats {
+  font-size:13px;
+  color:var(--muted);
+}
+
+/* Password Meter */
+.btn-toggle-pw {
+  background:transparent;
+  border:0;
+  font-size:12px;
+  color:var(--muted);
+  text-decoration:underline;
+  cursor:pointer;
+  padding:0;
+}
+
+.password-meter-wrap {
+  height:6px;
+  background:var(--line);
+  border-radius:3px;
+  overflow:hidden;
+}
+
+.password-meter-bar {
+  height:100%;
+  width:0;
+  background:var(--error);
+  transition:width 200ms ease,background-color 200ms ease;
+}
+
+.password-meter-text {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+/* Pass Card Styling (Memorable Feature) */
+.pass-card {
+  background:var(--white);
+  border:2px solid var(--ink);
+  padding:34px;
+  position:relative;
+  box-shadow:8px 8px 0 var(--ink);
+}
+
+.pass-card::before {
+  content:'';
+  position:absolute;
+  left:-14px;
+  top:50%;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--paper);
+  border-right:2px solid var(--ink);
+  transform:translateY(-50%);
+}
+
+.pass-card::after {
+  content:'';
+  position:absolute;
+  right:-14px;
+  top:50%;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--paper);
+  border-left:2px solid var(--ink);
+  transform:translateY(-50%);
+}
+
+.pass-name {
+  font-family:var(--heading);
+  font-size:36px;
+  letter-spacing:-.04em;
+  margin:10px 0 0;
+}
+
+.pass-number-badge {
+  text-align:right;
+}
+
+.pass-serial-label {
+  font-size:10px;
+  font-weight:700;
+  color:var(--muted);
+  letter-spacing:.1em;
+  display:block;
+}
+
+.pass-serial {
+  font-family:var(--heading);
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:.05em;
+  color:var(--accent);
+}
+
+.pass-grid {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin:0;
+}
+
+.pass-grid dt {
+  font-size:11px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:4px;
+}
+
+.pass-grid dd {
+  font-family:var(--heading);
+  font-size:16px;
+  font-weight:700;
+  color:var(--ink);
+  margin:0;
+}
+
+.pass-schedule-list {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.pass-schedule-item {
+  font-size:13px;
+  padding:6px 0;
+  border-bottom:1px dashed var(--line);
+}
+
+/* Responsive */
+@media(max-width:991.98px) {
+  .planner-evenings-grid {
+    grid-template-columns:1fr;
+  }
+  .pass-grid {
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:575.98px) {
+  .planner-choice-card {
+    flex-direction:column;
+  }
+  .planner-choice-card .session-art {
+    width:100%;
+    min-height:140px;
+  }
+  .pass-card {
+    padding:22px 18px;
+  }
+  .pass-grid {
+    grid-template-columns:1fr;
+  }
+}
+
