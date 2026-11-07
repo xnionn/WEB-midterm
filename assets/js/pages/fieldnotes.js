@@ -306,9 +306,9 @@
       $btn.attr('aria-label', isSaved ? 'Remove bookmark' : 'Bookmark this note');
       $btn.text(isSaved ? '★ Saved' : '☆ Save');
 
-      // Small bounce effect with jQuery
-      $btn.stop(true, true).animate({ transform: 'scale(1.15)' }, 100)
-        .animate({ transform: 'scale(1)' }, 100);
+      // Small bounce effect via CSS class with transition
+      $btn.addClass('is-bouncing');
+      setTimeout(() => $btn.removeClass('is-bouncing'), 180);
 
       OFFLINE.toast(isSaved ? 'Saved to bookmarks' : 'Bookmark removed');
     });
