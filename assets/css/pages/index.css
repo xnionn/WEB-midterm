@@ -1,0 +1,251 @@
+/* Home page: next-evening summary and the "Which evening is yours?" quiz. */
+
+#next-summary {
+  margin:-14px 0 18px;
+}
+
+.quiz-section {
+  display:grid;
+  grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:7%;
+  align-items:start;
+}
+
+.quiz-intro .lead-copy {
+  max-width:24rem;
+}
+
+.quiz-card {
+  background:var(--white);
+  border:1px solid var(--ink);
+  padding:36px;
+  min-height:420px;
+  box-shadow:8px 8px 0 var(--ink);
+}
+
+.quiz-counter {
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin:0 0 10px;
+}
+
+.quiz-progress {
+  height:6px;
+  background:var(--line);
+  margin-bottom:28px;
+}
+
+.quiz-progress-bar {
+  height:100%;
+  background:var(--accent);
+}
+
+.quiz-form fieldset {
+  border:0;
+  margin:0 0 24px;
+  padding:0;
+  min-width:0;
+}
+
+.quiz-question {
+  float:none;
+  width:100%;
+  font-family:var(--heading);
+  font-size:clamp(24px,3.2vw,32px);
+  line-height:1.12;
+  letter-spacing:-.04em;
+  font-weight:600;
+  margin-bottom:8px;
+  padding:0;
+}
+
+.quiz-question:focus {
+  outline:none;
+}
+
+.quiz-question:focus-visible {
+  outline:3px solid #9d350f;
+  outline-offset:6px;
+}
+
+.quiz-form .form-hint {
+  margin:0 0 20px;
+}
+
+.quiz-option {
+  position:relative;
+  margin-bottom:10px;
+}
+
+/* The radio is visually hidden but stays focusable; its label is the big clickable card. */
+.quiz-radio {
+  position:absolute;
+  opacity:0;
+  width:1px;
+  height:1px;
+}
+
+.quiz-option label {
+  display:flex;
+  gap:14px;
+  align-items:center;
+  min-height:56px;
+  padding:14px 18px;
+  border:1px solid #b4b4a7;
+  border-radius:3px;
+  background:var(--paper);
+  font-size:15px;
+  line-height:1.4;
+  cursor:pointer;
+  transition:background-color 120ms ease-out,border-color 120ms ease-out,transform 120ms ease-out;
+}
+
+.quiz-option label:hover {
+  border-color:var(--ink);
+  background:#fffdf7;
+  transform:translateX(4px);
+}
+
+.quiz-radio:focus-visible + label {
+  outline:3px solid #9d350f;
+  outline-offset:3px;
+}
+
+.quiz-radio:checked + label {
+  background:var(--ink);
+  border-color:var(--ink);
+  color:var(--white);
+}
+
+.quiz-key {
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:26px;
+  height:26px;
+  border:1px solid currentColor;
+  border-radius:50%;
+  font-size:12px;
+  font-weight:700;
+}
+
+.quiz-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.quiz-result-title {
+  font-size:clamp(32px,4.4vw,46px);
+  margin:22px 0 14px;
+}
+
+.quiz-result-title:focus {
+  outline:none;
+}
+
+.quiz-result p {
+  color:var(--muted);
+  font-size:15px;
+}
+
+.quiz-scores {
+  list-style:none;
+  padding:0;
+  margin:26px 0;
+}
+
+.quiz-scores li {
+  display:grid;
+  grid-template-columns:86px minmax(0,1fr) 44px;
+  gap:12px;
+  align-items:center;
+  padding:8px 0;
+  font-size:13px;
+}
+
+.quiz-scores .is-winner {
+  font-weight:700;
+}
+
+.quiz-score-track {
+  height:10px;
+  background:var(--line);
+  display:block;
+}
+
+.quiz-score-bar {
+  display:block;
+  height:100%;
+  width:0;
+  background:var(--ink);
+}
+
+.quiz-scores .is-winner .quiz-score-bar {
+  background:var(--accent);
+}
+
+.quiz-score-value {
+  text-align:right;
+}
+
+.quiz-match {
+  border-top:1px solid var(--line);
+  padding-top:22px;
+  margin-bottom:12px;
+}
+
+.quiz-match h4 {
+  font-family:var(--heading);
+  font-size:26px;
+  letter-spacing:-.04em;
+  margin:8px 0;
+}
+
+.quiz-match-meta {
+  font-size:13px!important;
+  margin:0 0 18px;
+}
+
+.quiz-restart {
+  background:transparent;
+  border-width:0 0 1px;
+  border-style:solid;
+  color:var(--ink);
+  cursor:pointer;
+  padding:0;
+}
+
+@media(max-width:991.98px) {
+  .quiz-section {
+    grid-template-columns:1fr;
+    gap:30px;
+  }
+  .quiz-intro .lead-copy {
+    max-width:34rem;
+  }
+}
+
+@media(max-width:575.98px) {
+  .quiz-card {
+    padding:22px 18px;
+    box-shadow:5px 5px 0 var(--ink);
+  }
+  .quiz-scores li {
+    grid-template-columns:70px minmax(0,1fr) 40px;
+  }
+  .quiz-actions .button {
+    flex:1 1 100%;
+  }
+}
+
+@media print {
+  .quiz-section {
+    display:none;
+  }
+}
+

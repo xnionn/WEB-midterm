@@ -1,0 +1,119 @@
+/* About page: searchable FAQ and the "Ask the club" form. */
+
+.faq-area {
+  min-width:0;
+}
+
+.faq-tools {
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.faq-tools .search-field {
+  max-width:none;
+  flex:none;
+}
+
+.about-faq .result-summary {
+  margin:6px 0 12px;
+}
+
+.about-faq .accordion-button:hover {
+  color:#9d350f;
+}
+
+.about-faq .accordion-button:focus-visible {
+  outline:3px solid #9d350f;
+  outline-offset:-3px;
+}
+
+.about-faq .accordion-button mark,
+.about-faq .accordion-body mark {
+  background:#f8ae96;
+  color:var(--ink);
+}
+
+.faq-panel[hidden] {
+  display:none;
+}
+
+.about-faq .empty-state {
+  margin-top:10px;
+}
+
+.ask-section {
+  display:grid;
+  grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);
+  gap:7%;
+  align-items:start;
+  border-top:1px solid var(--line);
+}
+
+.ask-intro .lead-copy {
+  max-width:24rem;
+}
+
+.ask-intro .form-notice {
+  padding-top:0;
+  max-width:24rem;
+}
+
+.ask-intro .result-summary {
+  margin-top:14px;
+}
+
+.ask-form {
+  background:var(--white);
+  border:1px solid var(--ink);
+  padding:34px;
+}
+
+.ask-form legend {
+  font-size:13px;
+  font-weight:500;
+  margin-bottom:8px;
+  float:none;
+  width:auto;
+  padding:0;
+}
+
+.ask-form fieldset {
+  border:0;
+  padding:0;
+  margin:0 0 25px;
+}
+
+.ask-form .form-check {
+  padding-left:26px;
+  font-size:13px;
+  margin:10px 0;
+}
+
+.ask-form .consent-check {
+  padding:20px 0 20px 26px;
+  margin:0 0 22px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+
+@media(max-width:991.98px) {
+  .ask-section {
+    grid-template-columns:1fr;
+    gap:30px;
+  }
+}
+
+@media(max-width:575.98px) {
+  .ask-form {
+    padding:22px 18px;
+  }
+}
+
+@media print {
+  .ask-section,
+  .faq-tools {
+    display:none;
+  }
+}

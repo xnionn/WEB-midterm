@@ -16,7 +16,7 @@
     </div>
   </section>
 
-  <section class="container section-space" aria-labelledby="principles-title">
+  <section class="container section-space" aria-labelledby="principles-title" data-reveal>
     <div class="section-heading-row">
       <div>
         <p class="eyebrow">Our very short manifesto</p>
@@ -53,25 +53,74 @@
     <div>
       <p class="eyebrow">Before you come</p>
       <h2 id="faq-title" class="section-heading">A few good<br>questions.</h2>
-      <p>Have a look around. When you’re ready, the <a href="join.html">join page</a> is a good place to start.</p>
+      <p>Search the answers, or pick a topic. Can’t find yours? <a href="#ask">Ask the club</a>.</p>
     </div>
-    <div class="accordion" id="club-faq">
-      <div class="accordion-item">
-        <h3 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq-experience" aria-expanded="true" aria-controls="faq-experience">Do I need any experience?</button></h3>
-        <div id="faq-experience" class="accordion-collapse collapse show" data-bs-parent="#club-faq"><div class="accordion-body">No. Each prompt starts with a small, approachable action. Come curious; you can learn the rest at the table.</div></div>
+    <div class="faq-area">
+      <div class="faq-tools">
+        <div class="search-field">
+          <label class="visually-hidden" for="faq-search">Search the questions</label>
+          <input class="form-control" id="faq-search" type="search" placeholder="Search the questions" autocomplete="off">
+        </div>
+        <div class="session-filters" id="faq-topics" role="group" aria-label="Filter questions by topic"></div>
       </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-phone" aria-expanded="false" aria-controls="faq-phone">What does “screen-free” mean?</button></h3>
-        <div id="faq-phone" class="accordion-collapse collapse" data-bs-parent="#club-faq"><div class="accordion-body">We invite you to keep your phone tucked away while making. If you need it for accessibility, an urgent message, or another practical reason, use it. It’s an invitation to focus, not a strict rule.</div></div>
+      <p class="result-summary" id="faq-count" aria-live="polite"></p>
+      <div class="accordion" id="club-faq"></div>
+      <div class="empty-state" id="faq-empty" hidden>
+        <h3>No question like that yet.</h3>
+        <p>Try a shorter word, or ask us directly in the form below.</p>
+        <button class="button button-outline" type="button" id="faq-reset">Clear search</button>
       </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-alone" aria-expanded="false" aria-controls="faq-alone">Can I come on my own?</button></h3>
-        <div id="faq-alone" class="accordion-collapse collapse" data-bs-parent="#club-faq"><div class="accordion-body">Absolutely. The activities work individually or side by side. You can join a conversation, or enjoy a quiet hour with your own project.</div></div>
-      </div>
-      <div class="accordion-item">
-        <h3 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-materials" aria-expanded="false" aria-controls="faq-materials">What should I bring?</button></h3>
-        <div id="faq-materials" class="accordion-collapse collapse" data-bs-parent="#club-faq"><div class="accordion-body">Check the materials note on your chosen gathering. A notebook and a favourite pen are useful, but the activities are designed around ordinary, inexpensive supplies.</div></div>
-      </div>
+      <noscript><p class="gathering-note">The questions need JavaScript. The short version: no experience needed, come alone or with a friend, and keep your phone away if you can.</p></noscript>
     </div>
+  </section>
+
+  <section class="container section-space ask-section" id="ask" aria-labelledby="ask-title">
+    <div class="ask-intro">
+      <p class="eyebrow">Still curious?</p>
+      <h2 id="ask-title" class="section-heading">Ask the club.</h2>
+      <p class="lead-copy">Tell us what you’d like to know, or what you’d need to feel comfortable at the table.</p>
+      <p class="form-notice">This is a student concept, so nothing is sent anywhere. Your question is saved only in this browser.</p>
+      <p class="result-summary" id="ask-saved" aria-live="polite"></p>
+    </div>
+    <form class="ask-form" id="ask-form" novalidate>
+      <div class="row">
+        <div class="col-md-6 form-field">
+          <label class="form-label" for="ask-name">Your name</label>
+          <input class="form-control" id="ask-name" name="name" type="text" autocomplete="given-name" maxlength="40">
+        </div>
+        <div class="col-md-6 form-field">
+          <label class="form-label" for="ask-email">Email</label>
+          <input class="form-control" id="ask-email" name="email" type="email" autocomplete="email" inputmode="email">
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="ask-topic">What is it about?</label>
+        <select class="form-select" id="ask-topic" name="topic">
+          <option value="">Choose a topic</option>
+          <option value="First time">My first time</option>
+          <option value="Phones">Phones and screens</option>
+          <option value="Materials">Materials</option>
+          <option value="Visiting">Visiting with friends</option>
+          <option value="Access">Access and comfort</option>
+          <option value="Other">Something else</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="ask-message">Your question</label>
+        <textarea class="form-control" id="ask-message" name="message" rows="4" aria-describedby="ask-count"></textarea>
+        <p class="form-hint" id="ask-count">0 of 500 characters. At least 20.</p>
+      </div>
+      <fieldset class="form-field">
+        <legend>When is the best time to reply?</legend>
+        <div class="form-check"><input class="form-check-input" type="radio" id="ask-time-morning" name="replyTime" value="morning"><label class="form-check-label" for="ask-time-morning">Morning</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" id="ask-time-afternoon" name="replyTime" value="afternoon"><label class="form-check-label" for="ask-time-afternoon">Afternoon</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" id="ask-time-evening" name="replyTime" value="evening"><label class="form-check-label" for="ask-time-evening">Evening</label></div>
+      </fieldset>
+      <div class="form-check consent-check form-field">
+        <input class="form-check-input" type="checkbox" id="ask-consent" name="consent">
+        <label class="form-check-label" for="ask-consent">I understand my question stays in this browser and nobody will read it.</label>
+      </div>
+      <button class="button" type="submit">Save my question <span aria-hidden="true">↗</span></button>
+    </form>
   </section>
 </main>
