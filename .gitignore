@@ -6,3 +6,5 @@ tools/
 .DS_Store
 *.log
 docs/
+repomix*
+
