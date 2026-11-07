@@ -1,0 +1,167 @@
+/* Gatherings page styling: filters toolbar, cards grid, and custom modal */
+
+.evening-controls {
+  display:grid;
+  grid-template-columns:1.5fr 1fr 1fr;
+  gap:18px;
+  margin-bottom:18px;
+}
+
+.evening-toolbar {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding-bottom:18px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:14px;
+}
+
+.evening-summary {
+  margin-bottom:28px;
+}
+
+.evening-grid {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:24px;
+}
+
+/* Card badges & custom elements */
+.badge-seats {
+  font-size:11px;
+  font-weight:600;
+  color:var(--ok);
+  background:var(--ok-bg);
+  padding:3px 8px;
+  border-radius:2px;
+}
+
+.badge-soldout {
+  font-size:11px;
+  font-weight:600;
+  color:var(--error);
+  background:var(--error-bg);
+  padding:3px 8px;
+  border-radius:2px;
+}
+
+.badge-tag {
+  font-size:11px;
+  color:var(--muted);
+  background:var(--paper);
+  border:1px solid var(--line);
+  padding:2px 6px;
+  border-radius:2px;
+}
+
+.session-title {
+  font-size:24px;
+  font-family:var(--heading);
+  letter-spacing:-.03em;
+  margin:12px 0 8px;
+  line-height:1.2;
+}
+
+.session-blurb {
+  font-size:14px;
+  color:var(--muted);
+  margin:0 0 16px;
+  line-height:1.5;
+}
+
+.session-details-btn {
+  background:transparent;
+  border:0;
+  padding:0;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink);
+  cursor:pointer;
+  text-decoration:underline;
+  margin-bottom:8px;
+  text-align:left;
+}
+
+.session-details-btn:hover {
+  color:var(--accent);
+}
+
+.session-details-panel {
+  padding:10px 12px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:2px;
+  margin-bottom:14px;
+}
+
+.is-sold-out {
+  opacity:0.85;
+}
+
+.is-sold-out .session-art {
+  filter:grayscale(0.6);
+}
+
+/* Custom modal styling matching the OFFLINE aesthetic */
+.booking-modal .modal-content {
+  background:var(--paper);
+  border:2px solid var(--ink);
+  border-radius:0;
+  box-shadow:10px 10px 0 var(--ink);
+}
+
+.booking-modal .modal-header {
+  border-bottom:1px solid var(--line);
+  padding:22px 26px 16px;
+}
+
+.booking-modal .modal-title {
+  font-family:var(--heading);
+  font-size:28px;
+  letter-spacing:-.04em;
+  margin:4px 0 0;
+}
+
+.booking-modal .modal-body {
+  padding:22px 26px;
+}
+
+.booking-modal .modal-footer {
+  border-top:1px solid var(--line);
+  padding:16px 26px 22px;
+  gap:12px;
+}
+
+.booking-modal .btn-close:focus {
+  box-shadow:0 0 0 3px #9d350f;
+}
+
+/* Responsive adjustments */
+@media(max-width:991.98px) {
+  .evening-controls {
+    grid-template-columns:1fr 1fr;
+  }
+  .evening-controls .form-field:first-child {
+    grid-column:1 / -1;
+  }
+  .evening-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:640px) {
+  .evening-controls {
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .evening-toolbar {
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .evening-grid {
+    grid-template-columns:1fr;
+  }
+}
+
