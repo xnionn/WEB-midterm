@@ -1,0 +1,151 @@
+/* Toolkit page styles: readiness progress, supply checklist and 4-panel gallery */
+
+.supply-summary-box {
+  background:var(--paper);
+  border:1px solid var(--line);
+  padding:16px 20px;
+  border-radius:2px;
+  margin-bottom:16px;
+}
+
+.supply-count-text {
+  font-weight:700;
+  font-size:14px;
+  font-family:var(--heading);
+}
+
+.supply-time-text {
+  font-size:12px;
+  color:var(--muted);
+}
+
+.supply-progress-track {
+  height:8px;
+  background:var(--line);
+  border-radius:4px;
+  overflow:hidden;
+  margin:8px 0;
+}
+
+.supply-progress-fill {
+  height:100%;
+  width:0;
+  background:var(--accent);
+  transition:background-color 200ms ease;
+}
+
+.supply-status-note {
+  font-size:12px;
+  color:var(--muted);
+  margin:0;
+  line-height:1.4;
+}
+
+.supply-status-note.is-ready {
+  color:var(--ok);
+  font-weight:600;
+}
+
+.supply-status-note.is-warning {
+  color:var(--accent);
+  font-weight:600;
+}
+
+.badge-required {
+  font-size:10px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  background:var(--error-bg);
+  color:var(--error);
+  padding:2px 6px;
+  border-radius:2px;
+}
+
+.supply-name {
+  font-weight:500;
+  font-size:14px;
+}
+
+.supply-hint {
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.4;
+}
+
+.supply-item {
+  padding-left:26px;
+}
+
+/* Gallery Controls & Steps */
+.gallery-toolbar {
+  border-bottom:1px solid var(--line);
+  padding-bottom:12px;
+}
+
+.panel-counter {
+  font-family:var(--heading);
+  font-size:14px;
+  font-weight:700;
+  color:var(--muted);
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+.gallery-dot {
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  border:2px solid var(--ink);
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+  transition:background-color 150ms ease,transform 150ms ease;
+}
+
+.gallery-dot.active {
+  background:var(--accent);
+  border-color:var(--accent);
+  transform:scale(1.25);
+}
+
+/* Hide inactive panels in gallery mode */
+.kit-steps {
+  position:relative;
+  min-height:220px;
+}
+
+.step-panel {
+  display:none;
+}
+
+.step-panel.active {
+  display:block;
+}
+
+@media(max-width:991.98px) {
+  .kit-workspace {
+    grid-template-columns:1fr;
+    gap:32px;
+  }
+}
+
+/* In print preview and when printing, all 4 panels MUST be displayed as a grid */
+@media print {
+  .gallery-toolbar,
+  .gallery-indicators,
+  .toolkit-actions,
+  .supply-toolbar,
+  .print-kit-button {
+    display:none!important;
+  }
+  .step-panel {
+    display:block!important;
+  }
+  .kit-steps {
+    display:grid!important;
+    grid-template-columns:1fr 1fr;
+    border:1px solid #000;
+  }
+}
+

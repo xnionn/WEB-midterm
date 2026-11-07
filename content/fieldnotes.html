@@ -23,22 +23,89 @@
     </div>
   </article>
 
-  <section class="container section-space" aria-labelledby="short-notes-title">
-    <div class="section-heading-row"><div><p class="eyebrow">Keep a little curiosity</p><h2 id="short-notes-title" class="section-heading">Three notes to open.</h2></div><p class="meta">Click a title. Follow a thought.</p></div>
-    <div class="journal-notes">
-      <details class="journal-note">
-        <summary><span class="note-index">02</span><span class="note-title">Collect a colour, not a photo.</span><span class="note-type">Observation</span><span class="note-toggle" aria-hidden="true">+</span></summary>
-        <div class="note-body"><p>Choose one colour before a short walk. Notice where it turns up: a door, a thread in someone’s coat, the edge of a receipt. Describe three examples in words when you get back.</p><p>The point is to pay attention without turning everything into an image to keep. “Warm orange, like the inside of a pencil” may tell you more than another photograph.</p><p class="note-prompt"><strong>Try it:</strong> Find five shades of one colour in ten minutes.</p></div>
-      </details>
-      <details class="journal-note">
-        <summary><span class="note-index">03</span><span class="note-title">A tiny book can hold a big question.</span><span class="note-type">Paper experiment</span><span class="note-toggle" aria-hidden="true">+</span></summary>
-        <div class="note-body"><p>Fold one sheet of paper into quarters. Each panel becomes a small place for an answer. Start with a question you can’t settle in one sentence: what makes a place feel like home?</p><p>Use a word, a shape, a memory, and an empty space. Different kinds of answers can sit beside each other. The small format makes it easier to finish without explaining everything.</p><p class="note-prompt"><strong>Try it:</strong> Make a four-panel book about one ordinary object.</p></div>
-      </details>
-      <details class="journal-note">
-        <summary><span class="note-index">04</span><span class="note-title">Let the wrong line stay.</span><span class="note-type">A making habit</span><span class="note-toggle" aria-hidden="true">+</span></summary>
-        <div class="note-body"><p>Drawing in pen leaves a record of your decisions. The line that went too far can become a shadow, a border, or the beginning of something else.</p><p>For one sketch, leave the eraser out of reach. This isn’t about proving you can draw perfectly. It’s a way to practise responding to what is already on the page.</p><p class="note-prompt"><strong>Try it:</strong> Draw your mug without lifting the pen. Keep every line.</p></div>
-      </details>
+  <section class="container section-space" id="notes-archive" aria-labelledby="notes-archive-title">
+    <div class="section-heading-row">
+      <div>
+        <p class="eyebrow">From the table</p>
+        <h2 id="notes-archive-title" class="section-heading">Browse field notes.</h2>
+      </div>
+      <p class="meta">Search, filter by tag, or open a note to read.</p>
     </div>
+
+    <div class="notes-controls">
+      <div class="search-field">
+        <label class="visually-hidden" for="notes-search">Search field notes</label>
+        <input class="form-control" id="notes-search" type="search" placeholder="Search notes by keyword or author" autocomplete="off">
+      </div>
+      <div class="session-filters" id="notes-tags" role="group" aria-label="Filter notes by tag"></div>
+      <div class="sort-field">
+        <label class="visually-hidden" for="notes-sort">Sort notes</label>
+        <select class="form-select" id="notes-sort">
+          <option value="newest">Newest first</option>
+          <option value="shortest">Shortest read first</option>
+          <option value="az">A to Z</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="result-summary" id="notes-summary" aria-live="polite"></p>
+
+    <div class="notes-grid" id="notes-list"></div>
+
+    <div class="empty-state" id="notes-empty" hidden>
+      <h3>No field notes match your filter.</h3>
+      <p>Try clearing your search term or choosing a different tag.</p>
+      <button class="button button-outline" type="button" id="notes-reset">Clear filters</button>
+    </div>
+
+    <noscript><p class="gathering-note">Interactive notes require JavaScript. You can still read the feature note above.</p></noscript>
+  </section>
+
+  <section class="container section-space write-note-section" id="write-note" aria-labelledby="write-note-title">
+    <div class="write-note-intro">
+      <p class="eyebrow">Leave your observation</p>
+      <h2 id="write-note-title" class="section-heading">Write a note.</h2>
+      <p class="lead-copy">Share a small prompt, a tactile discovery, or an idea from your own offline time.</p>
+      <p class="form-notice">Your note stays saved in your browser on this device. No server, no account needed.</p>
+    </div>
+    <form class="write-note-form" id="write-note-form" novalidate>
+      <div class="row">
+        <div class="col-md-6 form-field">
+          <label class="form-label" for="note-author">Your name</label>
+          <input class="form-control" id="note-author" name="author" type="text" autocomplete="name" maxlength="40">
+        </div>
+        <div class="col-md-6 form-field">
+          <label class="form-label" for="note-email">Your email</label>
+          <input class="form-control" id="note-email" name="email" type="email" autocomplete="email" inputmode="email">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8 form-field">
+          <label class="form-label" for="note-title">Note title</label>
+          <input class="form-control" id="note-title" name="title" type="text" maxlength="80">
+        </div>
+        <div class="col-md-4 form-field">
+          <label class="form-label" for="note-tag">Category</label>
+          <select class="form-select" id="note-tag" name="tag">
+            <option value="">Choose a tag</option>
+            <option value="Make">Make</option>
+            <option value="Play">Play</option>
+            <option value="Slow">Slow</option>
+            <option value="Ideas">Ideas</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="note-text">Your note (50–600 characters)</label>
+        <textarea class="form-control" id="note-text" name="text" rows="4" aria-describedby="note-char-count"></textarea>
+        <p class="form-hint" id="note-char-count">0 of 600 characters. At least 50.</p>
+      </div>
+      <div class="form-check consent-check form-field">
+        <input class="form-check-input" type="checkbox" id="note-consent" name="consent">
+        <label class="form-check-label" for="note-consent">I confirm this note is my own observation and understand it is kept in this browser.</label>
+      </div>
+      <button class="button" type="submit">Add note to the board <span aria-hidden="true">↗</span></button>
+    </form>
   </section>
 
   <aside class="container journal-invitation section-space" aria-label="Join a gathering">
