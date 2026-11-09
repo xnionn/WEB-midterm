@@ -963,7 +963,7 @@ p {
 }
 
 .form-control,.form-select {
-  background:var(--white);
+  background-color:var(--white);
   border:1px solid #b4b4a7;
   min-height:50px;
   border-radius:3px;
@@ -973,7 +973,7 @@ p {
 }
 
 .form-control:focus,.form-select:focus {
-  background:var(--white);
+  background-color:var(--white);
   border-color:var(--ink);
   box-shadow:0 0 0 3px #f45d3226;
   color:var(--ink);
