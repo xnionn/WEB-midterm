@@ -10,11 +10,23 @@
 
 (function (OFFLINE) {
   const BOOKINGS_KEY = 'offline-bookings-v1';
+  const ANCHOR_KEY = 'offline-schedule-anchor-v1';
 
-  // The first `weekday` that is at least `weeksAhead` weeks from tomorrow.
+  const getScheduleAnchor = () => {
+    const saved = OFFLINE.storage.get(ANCHOR_KEY, '');
+    if (saved && /^\d{4}-\d{2}-\d{2}$/.test(saved) && OFFLINE.daysUntil(saved) >= -28) {
+      const [y, m, d] = saved.split('-').map(Number);
+      return new Date(y, m - 1, d, 12, 0, 0, 0);
+    }
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    OFFLINE.storage.set(ANCHOR_KEY, OFFLINE.toIso(today));
+    return today;
+  };
+
+  // The first `weekday` that is at least `weeksAhead` weeks from the device's schedule anchor date.
   const upcomingDate = (weekday, weeksAhead) => {
-    const date = new Date();
-    date.setHours(12, 0, 0, 0);
+    const date = getScheduleAnchor();
     date.setDate(date.getDate() + 1 + (weeksAhead - 1) * 7);
     while (date.getDay() !== weekday) date.setDate(date.getDate() + 1);
     return OFFLINE.toIso(date);
@@ -34,7 +46,6 @@
   ];
 
   // Seats booked on this device through the Gatherings page: { gatheringId: extraSeats }.
-  // Kept in memory too, so booking still works for this visit when browser storage is blocked.
   const stored = OFFLINE.storage.get(BOOKINGS_KEY, {});
   const bookings = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
 
@@ -45,10 +56,21 @@
 
   OFFLINE.getGathering = (id) => OFFLINE.gatherings.find((event) => event.id === id) || null;
 
-  // Places still free, counting seats booked on this device.
   OFFLINE.seatsLeft = (event) => {
     const extra = Number(bookings[event.id]) || 0;
     return Math.max(0, event.seats - event.booked - extra);
+  };
+
+  OFFLINE.getBookedSeats = (id) => Number(bookings[id]) || 0;
+
+  OFFLINE.getAllBookings = () => {
+    const entries = [];
+    Object.entries(bookings).forEach(([id, count]) => {
+      const num = Number(count) || 0;
+      const event = OFFLINE.getGathering(id);
+      if (num > 0 && event) entries.push({ event, seats: num });
+    });
+    return entries;
   };
 
   OFFLINE.bookSeats = (id, count) => {
@@ -56,6 +78,19 @@
     if (!event || !Number.isInteger(count) || count < 1 || count > OFFLINE.seatsLeft(event)) return false;
     bookings[id] = (Number(bookings[id]) || 0) + count;
     OFFLINE.storage.set(BOOKINGS_KEY, bookings);
+    return true;
+  };
+
+  OFFLINE.cancelBooking = (id) => {
+    if (!bookings[id]) return false;
+    delete bookings[id];
+    OFFLINE.storage.set(BOOKINGS_KEY, bookings);
+    return true;
+  };
+
+  OFFLINE.clearBookings = () => {
+    Object.keys(bookings).forEach((key) => { delete bookings[key]; });
+    OFFLINE.storage.remove(BOOKINGS_KEY);
     return true;
   };
 

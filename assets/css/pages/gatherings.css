@@ -1,4 +1,4 @@
-/* Gatherings page styling: filters toolbar, cards grid, and custom modal */
+/* Gatherings page styling: filters toolbar, cards grid, saved bar, and custom modal */
 
 .evening-controls {
   display:grid;
@@ -19,7 +19,7 @@
 }
 
 .evening-summary {
-  margin-bottom:28px;
+  margin-bottom:20px;
 }
 
 .evening-grid {
@@ -85,7 +85,7 @@
 }
 
 .session-details-btn:hover {
-  color:var(--accent);
+  color:var(--accent-text);
 }
 
 .session-details-panel {
@@ -94,6 +94,11 @@
   border:1px solid var(--line);
   border-radius:2px;
   margin-bottom:14px;
+}
+
+.btn-toggle-plan.is-in-plan {
+  border-color:var(--accent);
+  color:var(--accent-text);
 }
 
 .is-sold-out {
@@ -107,6 +112,7 @@
 /* Custom modal styling matching the OFFLINE aesthetic */
 .booking-modal .modal-content {
   background:var(--paper);
+  color:var(--ink);
   border:2px solid var(--ink);
   border-radius:0;
   box-shadow:10px 10px 0 var(--ink);
@@ -135,7 +141,7 @@
 }
 
 .booking-modal .btn-close:focus {
-  box-shadow:0 0 0 3px #9d350f;
+  box-shadow:0 0 0 3px var(--focus-ring);
 }
 
 /* Responsive adjustments */
@@ -164,4 +170,3 @@
     grid-template-columns:1fr;
   }
 }
-
