@@ -1,4 +1,4 @@
-/* About page: searchable FAQ and the "Ask the club" form. */
+/* About page: searchable FAQ and the "Ask the club" form with saved questions list. */
 
 .faq-area {
   min-width:0;
@@ -21,18 +21,18 @@
 }
 
 .about-faq .accordion-button:hover {
-  color:#9d350f;
+  color:var(--accent-text);
 }
 
 .about-faq .accordion-button:focus-visible {
-  outline:3px solid #9d350f;
+  outline:3px solid var(--focus-ring);
   outline-offset:-3px;
 }
 
 .about-faq .accordion-button mark,
 .about-faq .accordion-body mark {
-  background:#f8ae96;
-  color:var(--ink);
+  background:var(--highlight-bg);
+  color:var(--highlight-ink);
 }
 
 .faq-panel[hidden] {
@@ -60,8 +60,31 @@
   max-width:24rem;
 }
 
-.ask-intro .result-summary {
-  margin-top:14px;
+.saved-questions-box {
+  margin-top:18px;
+  padding:16px;
+  background:var(--surface-alt);
+  border:1px solid var(--line);
+  border-radius:3px;
+  font-size:13px;
+}
+
+.saved-questions-list {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.saved-question-item {
+  padding:10px 0;
+  border-top:1px solid var(--line);
+}
+
+.saved-question-text {
+  font-size:13px;
+  color:var(--ink);
+  margin:6px 0 4px;
+  line-height:1.45;
 }
 
 .ask-form {

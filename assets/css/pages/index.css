@@ -67,7 +67,7 @@
 }
 
 .quiz-question:focus-visible {
-  outline:3px solid #9d350f;
+  outline:3px solid var(--focus-ring);
   outline-offset:6px;
 }
 
@@ -94,9 +94,10 @@
   align-items:center;
   min-height:56px;
   padding:14px 18px;
-  border:1px solid #b4b4a7;
+  border:1px solid var(--line-strong);
   border-radius:3px;
   background:var(--paper);
+  color:var(--ink);
   font-size:15px;
   line-height:1.4;
   cursor:pointer;
@@ -105,19 +106,19 @@
 
 .quiz-option label:hover {
   border-color:var(--ink);
-  background:#fffdf7;
+  background:var(--surface-alt);
   transform:translateX(4px);
 }
 
 .quiz-radio:focus-visible + label {
-  outline:3px solid #9d350f;
+  outline:3px solid var(--focus-ring);
   outline-offset:3px;
 }
 
 .quiz-radio:checked + label {
   background:var(--ink);
   border-color:var(--ink);
-  color:var(--white);
+  color:var(--paper);
 }
 
 .quiz-key {
@@ -248,4 +249,3 @@
     display:none;
   }
 }
-

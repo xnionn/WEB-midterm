@@ -8,6 +8,13 @@
   --ok-bg:#e6efe3;
 }
 
+[data-theme="dark"] {
+  --error:#ff7e6b;
+  --error-bg:#381c18;
+  --ok:#72d591;
+  --ok-bg:#193222;
+}
+
 /* ---------- Field errors (written by validation.js) ---------- */
 .field-error {
   color:var(--error);
@@ -46,7 +53,7 @@ textarea.form-control.is-invalid {
 .form-control.is-invalid:focus,
 .form-select.is-invalid:focus {
   border-color:var(--error);
-  box-shadow:0 0 0 3px #a52a1226;
+  box-shadow:0 0 0 3px var(--error-bg);
 }
 
 .form-check-input.is-invalid {
@@ -89,7 +96,7 @@ textarea.form-control {
 
 /* ---------- Empty result ("nothing found") ---------- */
 .empty-state {
-  border:1px dashed #898b7c;
+  border:1px dashed var(--line-strong);
   background:var(--white);
   padding:44px 28px;
   text-align:center;
@@ -151,8 +158,8 @@ textarea.form-control {
 }
 
 mark.search-hit {
-  background:#f8ae96;
-  color:var(--ink);
+  background:var(--highlight-bg);
+  color:var(--highlight-ink);
   padding:0 2px;
 }
 
@@ -166,12 +173,12 @@ mark.search-hit {
   max-width:min(92vw,520px);
   padding:14px 22px;
   background:var(--ink);
-  color:var(--white);
+  color:var(--paper);
   border-left:6px solid var(--accent);
   font-size:14px;
   font-weight:500;
   line-height:1.5;
-  box-shadow:0 12px 30px #24251f33;
+  box-shadow:0 12px 30px #0000004d;
 }
 
 .site-toast[hidden] {
@@ -187,7 +194,7 @@ mark.search-hit {
   width:48px;
   height:48px;
   background:var(--ink);
-  color:var(--white);
+  color:var(--paper);
   border:1px solid var(--ink);
   border-radius:3px;
   font-size:20px;
@@ -202,12 +209,11 @@ mark.search-hit {
 .back-to-top:hover {
   background:var(--accent);
   border-color:var(--accent);
-  color:var(--ink);
+  color:var(--poster-ink);
 }
 
 /* ---------- Interactive hover states for cards and buttons ---------- */
 .session-card,
-.journal-note,
 .next-gathering,
 .quiz-card,
 .note-card,
@@ -285,4 +291,3 @@ mark.search-hit {
     display:none!important;
   }
 }
-
