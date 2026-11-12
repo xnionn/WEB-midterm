@@ -1,5 +1,5 @@
 /* Gatherings page: search, filtering, sorting, live summary, details toggle,
- * and seat reservation in a Bootstrap modal.
+ * cross-page plan toggle, seat reservation management, and Bootstrap booking modal.
  * Data: OFFLINE.gatherings (data/gatherings.js). */
 'use strict';
 
@@ -12,6 +12,7 @@
   const filterButtons = document.querySelectorAll('.session-filters [data-filter]');
   const hideSoldOutCheckbox = document.querySelector('#hide-sold-out');
   const clearFiltersBtn = document.querySelector('#clear-filters');
+  const savedBar = document.querySelector('#gatherings-saved-bar');
 
   // Stats
   const statShown = document.querySelector('#stat-shown');
@@ -30,36 +31,15 @@
   let filterHideSoldOut = false;
   let sortBy = 'soonest';
 
-  /* ---------- Safe Text Highlighting ---------- */
-  const highlight = (text, query) => {
-    const fragment = document.createDocumentFragment();
-    if (!query) {
-      fragment.append(text);
-      return fragment;
-    }
-    const pattern = new RegExp(`(${OFFLINE.escapeRegExp(query)})`, 'ig');
-    text.split(pattern).forEach((part) => {
-      if (part.toLowerCase() === query.toLowerCase()) {
-        fragment.append(OFFLINE.el('mark', { class: 'search-hit', text: part }));
-      } else if (part) {
-        fragment.append(part);
-      }
-    });
-    return fragment;
-  };
-
   /* ---------- Initialize Dropdowns ---------- */
   const initFilterControls = () => {
-    // Populate levels
     const levels = [...new Set(OFFLINE.gatherings.map((g) => g.level))];
     levels.forEach((lvl) => {
       levelSelect.append(OFFLINE.el('option', { value: lvl, text: lvl }));
     });
 
-    // Populate booking select
     populateBookingSelect();
 
-    // Check URL parameters (e.g. ?category=make)
     const params = new URLSearchParams(window.location.search);
     const catParam = params.get('category');
     if (catParam && ['make', 'play', 'slow'].includes(catParam)) {
@@ -75,7 +55,7 @@
     OFFLINE.gatherings.forEach((event) => {
       const free = OFFLINE.seatsLeft(event);
       const text = `${event.title} · ${OFFLINE.formatDate(event.date, { short: true })} (${free > 0 ? `${free} left` : 'Sold out'})`;
-      const opt = OFFLINE.el('option', { value: event.id, text: text });
+      const opt = OFFLINE.el('option', { value: event.id, text });
       if (free === 0) opt.disabled = true;
       bookingEveningSelect.append(opt);
     });
@@ -85,7 +65,7 @@
   const getFilteredGatherings = () => {
     const q = filterQuery.trim().toLowerCase();
 
-    let list = OFFLINE.gatherings.filter((event) => {
+    const list = OFFLINE.gatherings.filter((event) => {
       if (filterCategory !== 'all' && event.category !== filterCategory) return false;
       if (filterLevel !== 'all' && event.level !== filterLevel) return false;
       if (filterHideSoldOut && OFFLINE.seatsLeft(event) === 0) return false;
@@ -99,47 +79,111 @@
     list.sort((a, b) => {
       if (sortBy === 'places') return OFFLINE.seatsLeft(b) - OFFLINE.seatsLeft(a);
       if (sortBy === 'az') return a.title.localeCompare(b.title);
-      // default: soonest
       return a.date.localeCompare(b.date) || a.start.localeCompare(b.start);
     });
 
     return list;
   };
 
+  /* ---------- Render Saved Plan & Reservations Summary Bar ---------- */
+  const renderSavedBar = () => {
+    if (!savedBar) return;
+    const planIds = OFFLINE.plan.getIds();
+    const plannedEvents = planIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
+    const bookedList = OFFLINE.getAllBookings();
+
+    savedBar.replaceChildren();
+
+    if (plannedEvents.length === 0 && bookedList.length === 0) {
+      savedBar.hidden = true;
+      return;
+    }
+
+    savedBar.hidden = false;
+    const totalMinutes = plannedEvents.reduce((sum, ev) => sum + OFFLINE.durationMinutes(ev), 0);
+    const totalHours = (totalMinutes / 60).toFixed(1).replace('.0', '');
+    const totalSeatsBooked = bookedList.reduce((sum, item) => sum + item.seats, 0);
+
+    const header = OFFLINE.el('div', { class: 'd-flex flex-wrap justify-content-between align-items-center gap-2 mb-2' }, [
+      OFFLINE.el('div', {}, [
+        OFFLINE.el('strong', { text: `${OFFLINE.plural(plannedEvents.length, 'evening')} in your plan (${totalHours}h)` }),
+        totalSeatsBooked > 0 && OFFLINE.el('span', { class: 'ms-2 meta', text: `· ${OFFLINE.plural(totalSeatsBooked, 'seat')} reserved on this device` }),
+      ]),
+      OFFLINE.el('div', { class: 'd-flex flex-wrap gap-3 align-items-center' }, [
+        OFFLINE.el('a', { class: 'text-link', href: 'join.html' }, [`Open Make a plan (${plannedEvents.length}) `, OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+        OFFLINE.el('button', { type: 'button', class: 'btn-delete-note', id: 'btn-clear-all-gatherings', text: 'Clear all saved' }),
+      ]),
+    ]);
+
+    const chipsWrap = OFFLINE.el('div', { class: 'd-flex flex-wrap gap-2' });
+
+    plannedEvents.forEach((ev) => {
+      const reservedCount = OFFLINE.getBookedSeats(ev.id);
+      const labelText = reservedCount > 0
+        ? `${ev.title} (${reservedCount} reserved)`
+        : ev.title;
+      const chip = OFFLINE.el('span', { class: 'saved-gathering-chip' }, [
+        OFFLINE.el('span', { text: labelText }),
+        OFFLINE.el('button', {
+          type: 'button',
+          class: 'chip-remove-btn',
+          'data-remove-saved': ev.id,
+          'aria-label': `Remove ${ev.title} from saved plan`,
+          text: '×',
+        }),
+      ]);
+      chipsWrap.append(chip);
+    });
+
+    bookedList.forEach(({ event, seats }) => {
+      if (planIds.includes(event.id)) return;
+      const chip = OFFLINE.el('span', { class: 'saved-gathering-chip' }, [
+        OFFLINE.el('span', { text: `${event.title} (${seats} reserved)` }),
+        OFFLINE.el('button', {
+          type: 'button',
+          class: 'chip-remove-btn',
+          'data-cancel-booking': event.id,
+          'aria-label': `Cancel seat reservation for ${event.title}`,
+          text: '×',
+        }),
+      ]);
+      chipsWrap.append(chip);
+    });
+
+    savedBar.append(header, chipsWrap);
+  };
+
   /* ---------- Render Card with DOM ---------- */
   const buildCard = (event, index, query) => {
     const free = OFFLINE.seatsLeft(event);
     const isSoldOut = free === 0;
+    const inPlan = OFFLINE.plan.has(event.id);
+    const bookedByVisitor = OFFLINE.getBookedSeats(event.id);
 
-    // Art
     const art = OFFLINE.categoryArt(event.category);
-
-    // Copy container
     const copy = OFFLINE.el('div', { class: 'session-card-copy' });
 
-    // Header badge
-    const headerRow = OFFLINE.el('div', { class: 'd-flex justify-content-between align-items-center mb-2' }, [
+    const headerRow = OFFLINE.el('div', { class: 'd-flex justify-content-between align-items-center mb-2 gap-2 flex-wrap' }, [
       OFFLINE.el('span', { class: 'tag', text: `${event.category.toUpperCase()} · 0${index + 1}` }),
-      isSoldOut
-        ? OFFLINE.el('span', { class: 'badge-soldout', text: 'Sold out' })
-        : OFFLINE.el('span', { class: 'badge-seats', text: `${free} places left` }),
+      OFFLINE.el('div', { class: 'd-flex gap-1 align-items-center' }, [
+        bookedByVisitor > 0 && OFFLINE.el('span', { class: 'badge-seats', text: `${bookedByVisitor} booked by you` }),
+        isSoldOut
+          ? OFFLINE.el('span', { class: 'badge-soldout', text: 'Sold out' })
+          : OFFLINE.el('span', { class: 'badge-seats', text: `${free} places left` }),
+      ]),
     ]);
 
-    // Title
     const h3 = OFFLINE.el('h3', { class: 'session-title' });
-    h3.append(highlight(event.title, query));
+    h3.append(OFFLINE.highlight(event.title, query));
 
-    // Blurb
     const blurb = OFFLINE.el('p', { class: 'session-blurb' });
-    blurb.append(highlight(event.blurb, query));
+    blurb.append(OFFLINE.highlight(event.blurb, query));
 
-    // Meta
     const meta = OFFLINE.el('div', { class: 'session-meta' }, [
       OFFLINE.el('span', { text: `${OFFLINE.formatDate(event.date)} · ${event.start}–${event.end}` }),
       OFFLINE.el('span', { text: `${event.place} · Level: ${event.level}` }),
     ]);
 
-    // Expandable details (jQuery slideToggle target)
     const detailsId = `details-${event.id}`;
     const detailsToggleBtn = OFFLINE.el('button', {
       type: 'button',
@@ -160,7 +204,6 @@
       ),
     ]);
 
-    // Action buttons
     const actions = OFFLINE.el('div', { class: 'session-actions mt-auto pt-3' }, [
       isSoldOut
         ? OFFLINE.el('button', { type: 'button', class: 'button button-small w-100 mb-2', disabled: true, text: 'No seats available' })
@@ -170,10 +213,13 @@
             'data-event-id': event.id,
             text: 'Reserve a seat ↗',
           }),
-      OFFLINE.el('a', {
-        class: 'text-link justify-content-between w-100',
-        href: `join.html?session=${event.id}`,
-      }, ['Plan this evening ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+      OFFLINE.el('button', {
+        type: 'button',
+        class: `button button-small button-outline w-100 btn-toggle-plan ${inPlan ? 'is-in-plan' : ''}`.trim(),
+        'data-plan-id': event.id,
+        'aria-pressed': String(inPlan),
+        text: inPlan ? '✓ Saved in your plan' : '+ Save to my plan',
+      }),
     ]);
 
     copy.append(headerRow, h3, blurb, meta, detailsToggleBtn, detailsPanel, actions);
@@ -206,10 +252,10 @@
   const renderCards = () => {
     const items = getFilteredGatherings();
     updateSummary(items);
+    renderSavedBar();
 
     const query = filterQuery.trim();
 
-    // jQuery effect 1: smooth card transition
     $(grid).stop(true, true).fadeOut(OFFLINE.speed, () => {
       grid.replaceChildren();
 
@@ -230,7 +276,6 @@
 
   /* ---------- Event Listeners ---------- */
   const bindEvents = () => {
-    // 1. Category filter buttons
     filterButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         filterCategory = btn.dataset.filter;
@@ -239,31 +284,26 @@
       });
     });
 
-    // 2. Search box (debounced)
     searchInput.addEventListener('input', OFFLINE.debounce(() => {
       filterQuery = searchInput.value;
       renderCards();
     }, 180));
 
-    // 3. Level dropdown
     levelSelect.addEventListener('change', () => {
       filterLevel = levelSelect.value;
       renderCards();
     });
 
-    // 4. Sort dropdown
     sortSelect.addEventListener('change', () => {
       sortBy = sortSelect.value;
       renderCards();
     });
 
-    // 5. Hide sold out checkbox
     hideSoldOutCheckbox.addEventListener('change', () => {
       filterHideSoldOut = hideSoldOutCheckbox.checked;
       renderCards();
     });
 
-    // 6. Clear filters button
     clearFiltersBtn.addEventListener('click', () => {
       filterCategory = 'all';
       filterLevel = 'all';
@@ -281,7 +321,6 @@
       searchInput.focus();
     });
 
-    // 7. jQuery effect 2: slideToggle details on card
     $(grid).on('click', '.session-details-btn', function () {
       const $btn = $(this);
       const $panel = $(`#${$btn.attr('aria-controls')}`);
@@ -298,13 +337,61 @@
       }
     });
 
-    // 8. Open booking modal when "Reserve a seat" is clicked
     $(grid).on('click', '.btn-reserve-seat', function () {
       const eventId = $(this).data('event-id');
       bookingEveningSelect.value = eventId;
+      const user = OFFLINE.account.current();
+      if (user) {
+        if (!bookingForm.elements.name.value && user.name) bookingForm.elements.name.value = user.name;
+        if (!bookingForm.elements.email.value && user.email) bookingForm.elements.email.value = user.email;
+        if (!bookingForm.elements.phone.value && user.phone) bookingForm.elements.phone.value = user.phone;
+      }
       const modal = bootstrap.Modal.getOrCreateInstance(bookingModalEl);
       modal.show();
     });
+
+    $(grid).on('click', '.btn-toggle-plan', function () {
+      const $btn = $(this);
+      const id = $btn.data('plan-id');
+      const added = OFFLINE.plan.toggle(id);
+      $btn.toggleClass('is-in-plan', added);
+      $btn.attr('aria-pressed', String(added));
+      $btn.text(added ? '✓ Saved in your plan' : '+ Save to my plan');
+      renderSavedBar();
+      const ev = OFFLINE.getGathering(id);
+      OFFLINE.toast(added ? `"${ev.title}" added to your plan!` : `"${ev.title}" removed from your plan.`);
+    });
+
+    if (savedBar) {
+      savedBar.addEventListener('click', (e) => {
+        const removePlanBtn = e.target.closest('[data-remove-saved]');
+        if (removePlanBtn) {
+          const id = removePlanBtn.dataset.removeSaved;
+          OFFLINE.plan.remove(id);
+          OFFLINE.cancelBooking(id);
+          populateBookingSelect();
+          renderCards();
+          OFFLINE.toast('Removed from your saved evenings.');
+          return;
+        }
+        const cancelBookBtn = e.target.closest('[data-cancel-booking]');
+        if (cancelBookBtn) {
+          const id = cancelBookBtn.dataset.cancelBooking;
+          OFFLINE.cancelBooking(id);
+          populateBookingSelect();
+          renderCards();
+          OFFLINE.toast('Seat reservation cancelled.');
+          return;
+        }
+        if (e.target.closest('#btn-clear-all-gatherings')) {
+          OFFLINE.plan.clear();
+          OFFLINE.clearBookings();
+          populateBookingSelect();
+          renderCards();
+          OFFLINE.toast('All saved evenings and reservations cleared.');
+        }
+      });
+    }
   };
 
   /* ---------- Booking Form Validation & Submit ---------- */
@@ -342,17 +429,17 @@
         return false;
       }
 
-      // Re-populate and re-render
+      // Also include the reserved evening in the visitor's cross-page plan
+      OFFLINE.plan.add(values.evening);
+
       populateBookingSelect();
       renderCards();
 
       const event = OFFLINE.getGathering(values.evening);
-      const msg = `Reserved ${seatsNum} ${seatsNum === 1 ? 'seat' : 'seats'} for "${event.title}". See you there!`;
+      const msg = `Reserved ${seatsNum} ${seatsNum === 1 ? 'seat' : 'seats'} for "${event.title}" and saved to your plan!`;
 
-      // Show toast via OFFLINE.toast (jQuery effect 3)
       OFFLINE.toast(msg);
 
-      // Close modal automatically after brief pause
       setTimeout(() => {
         const modal = bootstrap.Modal.getInstance(bookingModalEl);
         if (modal) modal.hide();
@@ -361,7 +448,6 @@
       return msg;
     });
 
-    // Reset errors when modal is closed
     bookingModalEl.addEventListener('hidden.bs.modal', () => {
       bookingForm.reset();
       $(bookingForm).find('.form-success').prop('hidden', true).empty();
