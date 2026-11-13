@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,15 +29,19 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navigation" aria-controls="site-navigation" aria-expanded="false" aria-label="Toggle navigation"><span class="menu-lines" aria-hidden="true"></span><span>Menu</span></button>
       <div class="collapse navbar-collapse" id="site-navigation">
         <div class="navbar-nav nav-links"><a class="nav-link" href="index.html">Home</a><a class="nav-link" href="gatherings.html">Gatherings</a><a class="nav-link" href="about.html">The club</a><a class="nav-link active" href="fieldnotes.html" aria-current="page">Field notes</a><a class="nav-link" href="toolkit.html">The toolkit</a></div>
-        <a class="button button-small nav-join" href="join.html">Make a plan <span aria-hidden="true">↗</span></a>
+        <div class="nav-utilities">
+          <div class="nav-auth-area" id="nav-auth-area"><a class="nav-login-link" href="join.html#login">Log in</a></div>
+          <a class="button button-small nav-join" href="join.html">Make a plan <span class="nav-plan-badge" id="nav-plan-count" hidden>0</span> <span aria-hidden="true">↗</span></a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark</span></button>
+        </div>
       </div>
     </nav>
   </header>
   <main id="main-content" class="fieldnotes-page">
-  <header class="container section-space journal-heading">
-    <div><p class="eyebrow">The OFFLINE notebook</p><h1 class="display-title">Field notes.</h1></div>
+  <section class="container section-space journal-heading" aria-labelledby="fieldnotes-title">
+    <div><p class="eyebrow">The OFFLINE notebook</p><h1 class="display-title" id="fieldnotes-title">Field notes.</h1></div>
     <p class="lead-copy">Small observations. <br>Open-ended experiments. <br>Ideas worth taking off-screen.</p>
-  </header>
+  </section>
 
   <article class="container journal-feature" aria-labelledby="feature-title">
     <div class="journal-art" role="img" aria-label="An original paper collage with a blue-grey cutout circle, orange torn strip, pencilled lines, and the handwritten words: start here">
@@ -48,7 +52,10 @@
       <span class="art-caption">Paper study · original OFFLINE illustration</span>
     </div>
     <div class="journal-feature-copy">
-      <p class="meta">Note 01 <span aria-hidden="true">/</span> On getting started <span aria-hidden="true">/</span> 3 min read</p>
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+        <p class="meta mb-0">Note 01 <span aria-hidden="true">/</span> On getting started <span aria-hidden="true">/</span> 3 min read</p>
+        <img src="assets/images/notebook-sketch.svg" alt="Open field notebook with botanical leaf rubbing and pencil notes" width="112" height="73" class="feature-badge-img">
+      </div>
       <h2 id="feature-title">The blank page<br>isn’t a test.</h2>
       <p class="feature-deck">There’s a particular kind of hesitation that arrives with a new notebook. The first mark suddenly feels far too important.</p>
       <p>Give the page a smaller job. It doesn’t have to hold your best idea. It can hold five lines, a rubbing of a leaf, or a list of things you noticed on the way home.</p>
@@ -64,7 +71,7 @@
         <p class="eyebrow">From the table</p>
         <h2 id="notes-archive-title" class="section-heading">Browse field notes.</h2>
       </div>
-      <p class="meta">Search, filter by tag, or open a note to read.</p>
+      <p class="meta">Search, filter by tag, or save notes to your toolkit.</p>
     </div>
 
     <div class="notes-controls">
@@ -84,6 +91,7 @@
     </div>
 
     <p class="result-summary" id="notes-summary" aria-live="polite"></p>
+    <div class="saved-items-bar mt-3" id="saved-notes-bar" aria-live="polite" hidden></div>
 
     <div class="notes-grid" id="notes-list"></div>
 

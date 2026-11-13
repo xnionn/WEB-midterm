@@ -1,5 +1,5 @@
 /* Field notes page: search, tag filters, sorting, live summary,
- * jQuery slideToggle expandable notes, like/bookmark count,
+ * jQuery slideToggle expandable notes, persistent cross-page bookmarks,
  * and a validated "Write a note" form saving visitor notes in localStorage.
  * Data: OFFLINE.notes (data/notes.js). */
 'use strict';
@@ -10,35 +10,17 @@
   const tagsContainer = document.querySelector('#notes-tags');
   const sortSelect = document.querySelector('#notes-sort');
   const summaryEl = document.querySelector('#notes-summary');
+  const savedBarEl = document.querySelector('#saved-notes-bar');
   const emptyState = document.querySelector('#notes-empty');
   const resetBtn = document.querySelector('#notes-reset');
   const noteForm = document.querySelector('#write-note-form');
 
   const VISITOR_NOTES_KEY = 'offline-visitor-notes-v1';
-  const BOOKMARKS_KEY = 'offline-bookmarks-v1';
   const MAX_TEXT_LENGTH = 600;
 
   let activeTag = 'All';
   let searchQuery = '';
   let activeSort = 'newest';
-
-  /* ---------- Safe Text Highlighting ---------- */
-  const highlight = (text, query) => {
-    const fragment = document.createDocumentFragment();
-    if (!query) {
-      fragment.append(text);
-      return fragment;
-    }
-    const pattern = new RegExp(`(${OFFLINE.escapeRegExp(query)})`, 'ig');
-    text.split(pattern).forEach((part) => {
-      if (part.toLowerCase() === query.toLowerCase()) {
-        fragment.append(OFFLINE.el('mark', { class: 'search-hit', text: part }));
-      } else if (part) {
-        fragment.append(part);
-      }
-    });
-    return fragment;
-  };
 
   /* ---------- Storage Helpers ---------- */
   const getVisitorNotes = () => {
@@ -50,36 +32,20 @@
     OFFLINE.storage.set(VISITOR_NOTES_KEY, notes);
   };
 
-  const getBookmarks = () => {
-    const stored = OFFLINE.storage.get(BOOKMARKS_KEY, []);
-    return Array.isArray(stored) ? stored : [];
-  };
-
-  const toggleBookmark = (noteId) => {
-    const bmarks = getBookmarks();
-    const idx = bmarks.indexOf(noteId);
-    if (idx === -1) {
-      bmarks.push(noteId);
-    } else {
-      bmarks.splice(idx, 1);
-    }
-    OFFLINE.storage.set(BOOKMARKS_KEY, bmarks);
-    return bmarks.includes(noteId);
-  };
+  const getAllNotes = () => [...getVisitorNotes(), ...OFFLINE.notes];
 
   /* ---------- Data Combination & Filtering ---------- */
-  const getAllNotes = () => {
-    const visitorNotes = getVisitorNotes();
-    // Visitor notes come first
-    return [...visitorNotes, ...OFFLINE.notes];
-  };
-
   const getFilteredNotes = () => {
     const all = getAllNotes();
+    const bookmarks = OFFLINE.bookmarks.getIds();
     const q = searchQuery.trim().toLowerCase();
 
-    let filtered = all.filter((note) => {
-      if (activeTag !== 'All' && note.tag !== activeTag) return false;
+    const filtered = all.filter((note) => {
+      if (activeTag === 'Saved') {
+        if (!bookmarks.includes(note.id)) return false;
+      } else if (activeTag !== 'All' && note.tag !== activeTag) {
+        return false;
+      }
       if (q) {
         const hay = `${note.title} ${note.text} ${note.author} ${note.tag}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -90,20 +56,61 @@
     filtered.sort((a, b) => {
       if (activeSort === 'shortest') return a.minutes - b.minutes;
       if (activeSort === 'az') return a.title.localeCompare(b.title);
-      // default: newest
       return b.date.localeCompare(a.date);
     });
 
     return filtered;
   };
 
+  /* ---------- Render Saved Reading List Bar ---------- */
+  const renderSavedBar = () => {
+    if (!savedBarEl) return;
+    const all = getAllNotes();
+    const bookmarkIds = OFFLINE.bookmarks.getIds();
+    const savedNotes = bookmarkIds.map((id) => all.find((n) => n.id === id)).filter(Boolean);
+
+    savedBarEl.replaceChildren();
+    if (savedNotes.length === 0) {
+      savedBarEl.hidden = true;
+      return;
+    }
+
+    savedBarEl.hidden = false;
+    const totalMinutes = savedNotes.reduce((sum, n) => sum + (Number(n.minutes) || 1), 0);
+
+    const header = OFFLINE.el('div', { class: 'd-flex flex-wrap justify-content-between align-items-center gap-2 mb-2' }, [
+      OFFLINE.el('div', {}, [
+        OFFLINE.el('strong', { text: `${OFFLINE.plural(savedNotes.length, 'saved note')} (${totalMinutes} min reading total)` }),
+        OFFLINE.el('span', { class: 'ms-2 meta', text: '· Shown in your Toolkit pause kit' }),
+      ]),
+      OFFLINE.el('div', { class: 'd-flex flex-wrap gap-3 align-items-center' }, [
+        OFFLINE.el('a', { class: 'text-link', href: 'toolkit.html#saved-notes-kit' }, ['Open in The toolkit ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+        OFFLINE.el('button', { type: 'button', class: 'btn-delete-note', id: 'btn-clear-bookmarks', text: 'Clear all saved' }),
+      ]),
+    ]);
+
+    const chips = OFFLINE.el('div', { class: 'd-flex flex-wrap gap-2' });
+    savedNotes.forEach((note) => {
+      chips.append(OFFLINE.el('span', { class: 'saved-gathering-chip' }, [
+        OFFLINE.el('span', { text: note.title }),
+        OFFLINE.el('button', {
+          type: 'button',
+          class: 'chip-remove-btn',
+          'data-unbookmark-id': note.id,
+          'aria-label': `Remove ${note.title} from saved notes`,
+          text: '×',
+        }),
+      ]));
+    });
+
+    savedBarEl.append(header, chips);
+  };
+
   /* ---------- Build Note Card Element ---------- */
   const buildNoteCard = (note, isVisitor, query) => {
-    const bookmarks = getBookmarks();
-    const isBookmarked = bookmarks.includes(note.id);
+    const isBookmarked = OFFLINE.bookmarks.has(note.id);
     const panelId = `note-body-${note.id}`;
 
-    // Tag and meta row
     const metaLeft = OFFLINE.el('div', { class: 'd-flex align-items-center gap-2 flex-wrap' }, [
       OFFLINE.el('span', { class: 'tag', text: note.tag }),
       OFFLINE.el('span', { class: 'meta-reading', text: `${note.minutes} min read` }),
@@ -124,20 +131,19 @@
       bookmarkBtn,
     ]);
 
-    // Title button for expandable toggle
     const titleBtn = OFFLINE.el('button', {
       type: 'button',
       class: 'note-toggle-button',
       'aria-expanded': 'true',
       'aria-controls': panelId,
     });
-    const h3 = OFFLINE.el('h3', { class: 'note-card-title' });
-    h3.append(highlight(note.title, query));
-    titleBtn.append(h3, OFFLINE.el('span', { class: 'toggle-indicator', 'aria-hidden': 'true', text: '▾' }));
+    const titleSpan = OFFLINE.el('span');
+    titleSpan.append(OFFLINE.highlight(note.title, query));
+    titleBtn.append(titleSpan, OFFLINE.el('span', { class: 'toggle-indicator', 'aria-hidden': 'true', text: '▾' }));
+    const h3 = OFFLINE.el('h3', { class: 'note-card-title' }, [titleBtn]);
 
-    // Note body (jQuery slideToggle target)
     const bodyText = OFFLINE.el('p', { class: 'note-card-text' });
-    bodyText.append(highlight(note.text, query));
+    bodyText.append(OFFLINE.highlight(note.text, query));
 
     const children = [bodyText];
     if (note.prompt) {
@@ -147,7 +153,6 @@
       ]));
     }
 
-    // Author info & Delete button if visitor note
     const footerParts = [
       OFFLINE.el('span', { class: 'note-author-info', text: `By ${note.author} · ${OFFLINE.formatDate(note.date, { short: true })}` }),
     ];
@@ -175,7 +180,7 @@
     const card = OFFLINE.el('article', {
       class: `note-card ${isVisitor ? 'is-visitor' : ''}`,
       id: `note-${note.id}`,
-    }, [header, titleBtn, bodyPanel]);
+    }, [header, h3, bodyPanel]);
 
     return card;
   };
@@ -184,6 +189,7 @@
   const updateSummary = (items) => {
     const count = items.length;
     const totalMinutes = items.reduce((sum, n) => sum + (Number(n.minutes) || 1), 0);
+    const savedCount = OFFLINE.bookmarks.getIds().length;
 
     summaryEl.replaceChildren(
       OFFLINE.el('span', {}, [
@@ -193,6 +199,10 @@
       OFFLINE.el('span', {}, [
         'Total reading time: ',
         OFFLINE.el('strong', { text: `${totalMinutes} min` }),
+      ]),
+      OFFLINE.el('span', {}, [
+        OFFLINE.el('strong', { text: savedCount }),
+        ' bookmarked for Toolkit',
       ])
     );
   };
@@ -201,6 +211,7 @@
   const renderNotes = () => {
     const items = getFilteredNotes();
     updateSummary(items);
+    renderSavedBar();
     const query = searchQuery.trim();
     const visitorNotes = getVisitorNotes();
     const visitorIds = new Set(visitorNotes.map((n) => n.id));
@@ -225,14 +236,15 @@
 
   /* ---------- Tag Filter Buttons ---------- */
   const initTags = () => {
-    const tags = ['All', 'Ideas', 'Make', 'Play', 'Slow'];
+    const tags = ['All', 'Ideas', 'Make', 'Play', 'Slow', 'Saved'];
+    tagsContainer.replaceChildren();
     tags.forEach((tag) => {
       const btn = OFFLINE.el('button', {
         type: 'button',
         class: 'filter-button',
         'data-tag': tag,
         'aria-pressed': String(tag === activeTag),
-        text: tag,
+        text: tag === 'Saved' ? '★ Saved' : tag,
       });
       tagsContainer.append(btn);
     });
@@ -250,19 +262,16 @@
 
   /* ---------- Event Bindings ---------- */
   const bindEvents = () => {
-    // Search
     searchInput.addEventListener('input', OFFLINE.debounce(() => {
       searchQuery = searchInput.value;
       renderNotes();
     }, 180));
 
-    // Sort
     sortSelect.addEventListener('change', () => {
       activeSort = sortSelect.value;
       renderNotes();
     });
 
-    // Reset button
     resetBtn.addEventListener('click', () => {
       searchQuery = '';
       activeTag = 'All';
@@ -278,7 +287,6 @@
       searchInput.focus();
     });
 
-    // jQuery effect: slideToggle note details
     $(listEl).on('click', '.note-toggle-button', function () {
       const $btn = $(this);
       const $panel = $(`#${$btn.attr('aria-controls')}`);
@@ -295,33 +303,53 @@
       }
     });
 
-    // Bookmark button
     $(listEl).on('click', '.btn-bookmark', function () {
       const $btn = $(this);
-      const noteId = $btn.data('note-id');
-      const isSaved = toggleBookmark(noteId);
+      const noteId = String($btn.data('note-id'));
+      const isSaved = OFFLINE.bookmarks.toggle(noteId);
 
       $btn.toggleClass('is-bookmarked', isSaved);
       $btn.attr('aria-pressed', String(isSaved));
       $btn.attr('aria-label', isSaved ? 'Remove bookmark' : 'Bookmark this note');
       $btn.text(isSaved ? '★ Saved' : '☆ Save');
 
-      // Small bounce effect via CSS class with transition
       $btn.addClass('is-bouncing');
       setTimeout(() => $btn.removeClass('is-bouncing'), 180);
 
-      OFFLINE.toast(isSaved ? 'Saved to bookmarks' : 'Bookmark removed');
+      updateSummary(getFilteredNotes());
+      renderSavedBar();
+      if (activeTag === 'Saved' && !isSaved) {
+        renderNotes();
+      }
+      OFFLINE.toast(isSaved ? 'Saved to bookmarks & Toolkit reading list' : 'Bookmark removed');
     });
 
-    // Delete visitor note
     $(listEl).on('click', '.btn-delete-note', function () {
-      const noteId = $(this).data('note-id');
+      const noteId = String($(this).data('note-id'));
       const existing = getVisitorNotes();
       const updated = existing.filter((n) => n.id !== noteId);
       saveVisitorNotes(updated);
+      OFFLINE.bookmarks.remove(noteId);
       renderNotes();
       OFFLINE.toast('Your note has been removed.');
     });
+
+    if (savedBarEl) {
+      savedBarEl.addEventListener('click', (e) => {
+        const unbookmarkBtn = e.target.closest('[data-unbookmark-id]');
+        if (unbookmarkBtn) {
+          OFFLINE.bookmarks.remove(unbookmarkBtn.dataset.unbookmarkId);
+          renderNotes();
+          OFFLINE.toast('Removed from saved notes.');
+          return;
+        }
+        if (e.target.closest('#btn-clear-bookmarks')) {
+          OFFLINE.bookmarks.clear();
+          renderNotes();
+          OFFLINE.toast('All saved bookmarks cleared.');
+        }
+      });
+    }
   };
 
   /* ---------- Write a Note Form ---------- */
@@ -374,11 +402,11 @@
       const existing = getVisitorNotes();
       existing.unshift(newNote);
       saveVisitorNotes(existing);
+      OFFLINE.bookmarks.toggle(newNote.id);
 
       renderNotes();
-      OFFLINE.toast('Note added to the board!');
+      OFFLINE.toast('Note added to the board and saved to your Toolkit!');
 
-      // Smooth scroll to the newly added note
       setTimeout(() => {
         const el = document.querySelector(`#note-${newNote.id}`);
         if (el) {
@@ -398,4 +426,3 @@
     renderNotes();
   });
 }(window.jQuery, window.OFFLINE));
-
