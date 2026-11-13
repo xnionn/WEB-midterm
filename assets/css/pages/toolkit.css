@@ -1,4 +1,4 @@
-/* Toolkit page styles: readiness progress, supply checklist and 4-panel gallery */
+/* Toolkit page styles: readiness progress, supply checklist, cross-page saved notes, and 4-panel gallery */
 
 .supply-summary-box {
   background:var(--paper);
@@ -47,7 +47,7 @@
 }
 
 .supply-status-note.is-warning {
-  color:var(--accent);
+  color:var(--accent-text);
   font-weight:600;
 }
 
@@ -123,10 +123,33 @@
   display:block;
 }
 
+/* Cross-Page Saved Field Notes Section on Toolkit */
+.toolkit-saved-section {
+  border-top:1px solid var(--line);
+}
+
+.toolkit-saved-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:20px;
+}
+
+.toolkit-saved-card {
+  background:var(--white);
+  border:1px solid var(--line);
+  padding:20px;
+  border-radius:2px;
+  display:flex;
+  flex-direction:column;
+}
+
 @media(max-width:991.98px) {
   .kit-workspace {
     grid-template-columns:1fr;
     gap:32px;
+  }
+  .toolkit-saved-grid {
+    grid-template-columns:1fr;
   }
 }
 
@@ -136,7 +159,8 @@
   .gallery-indicators,
   .toolkit-actions,
   .supply-toolbar,
-  .print-kit-button {
+  .print-kit-button,
+  .toolkit-saved-section {
     display:none!important;
   }
   .step-panel {
@@ -148,4 +172,3 @@
     border:1px solid #000;
   }
 }
-
