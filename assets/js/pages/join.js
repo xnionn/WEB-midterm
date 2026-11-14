@@ -1,21 +1,23 @@
-/* Make a plan page: multi-event basket, conflict detection,
- * two-step wizard with animated password strength meter,
- * full form validation, and an interactive "Offline Pass" card with .ics export.
- * Data: OFFLINE.gatherings (data/gatherings.js). */
+/* Make a plan page: Step 1 synced evening basket, category/search filters, and interval conflict detection.
+ * Uses shared OFFLINE.plan API (core.js) and OFFLINE.gatherings (data/gatherings.js). */
 'use strict';
 
 (function ($, OFFLINE) {
-  const PLAN_KEY = 'offline-plan-v2';
   const PASS_KEY = 'offline-pass-v1';
-  const OLD_PLAN_KEY = 'offline-plan-v1';
 
   // Elements
   const tabStep1 = document.querySelector('#wizard-tab-1');
   const tabStep2 = document.querySelector('#wizard-tab-2');
+  const tabStep3 = document.querySelector('#wizard-tab-3');
   const panelStep1 = document.querySelector('#wizard-step-1');
   const panelStep2 = document.querySelector('#wizard-step-2');
 
+  const filterButtons = Array.from(document.querySelectorAll('[data-plan-filter]'));
+  const searchInput = document.querySelector('#planner-search');
   const eveningsGrid = document.querySelector('#planner-evenings-list');
+  const plannerEmpty = document.querySelector('#planner-empty');
+  const btnResetFilter = document.querySelector('#btn-reset-plan-filter');
+
   const basketBadge = document.querySelector('#basket-badge');
   const basketList = document.querySelector('#basket-items-list');
   const conflictError = document.querySelector('#basket-conflict-error');
@@ -37,6 +39,7 @@
   const passSection = document.querySelector('#pass-section');
   const passSerial = document.querySelector('#pass-serial');
   const passTitle = document.querySelector('#pass-title');
+  const passContact = document.querySelector('#pass-contact');
   const passEveningsCount = document.querySelector('#pass-evenings-count');
   const passHours = document.querySelector('#pass-hours');
   const passParty = document.querySelector('#pass-party');
@@ -48,30 +51,8 @@
 
   let currentStep = 1;
   let isWizardBusy = false;
-  let selectedEveningIds = [];
-
-  /* ---------- Storage & Migration ---------- */
-  const loadPlanIds = () => {
-    // Migration check
-    const oldPlan = OFFLINE.storage.get(OLD_PLAN_KEY);
-    const existing = OFFLINE.storage.get(PLAN_KEY);
-
-    if (existing && Array.isArray(existing)) {
-      return existing;
-    }
-
-    if (oldPlan && oldPlan.session) {
-      const migrated = [oldPlan.session];
-      OFFLINE.storage.set(PLAN_KEY, migrated);
-      return migrated;
-    }
-
-    return [];
-  };
-
-  const savePlanIds = (ids) => {
-    OFFLINE.storage.set(PLAN_KEY, ids);
-  };
+  let activeCategory = 'all';
+  let activeQuery = '';
 
   const loadPass = () => OFFLINE.storage.get(PASS_KEY, null);
   const savePass = (pass) => OFFLINE.storage.set(PASS_KEY, pass);
@@ -99,12 +80,23 @@
     return conflicts;
   };
 
-  /* ---------- Render Evenings in Step 1 ---------- */
+  /* ---------- Filtering & Step 1 Grid ---------- */
+  const matchesFilters = (event) => {
+    if (activeCategory !== 'all' && event.category !== activeCategory) return false;
+    if (!activeQuery) return true;
+    const haystack = `${event.title} ${event.place} ${event.category} ${(event.tags || []).join(' ')}`.toLowerCase();
+    return haystack.includes(activeQuery);
+  };
+
   const renderEveningSelectors = () => {
+    const selectedIds = OFFLINE.plan.getIds();
+    const visibleEvents = OFFLINE.gatherings.filter(matchesFilters);
     eveningsGrid.replaceChildren();
 
-    OFFLINE.gatherings.forEach((event) => {
-      const isSelected = selectedEveningIds.includes(event.id);
+    plannerEmpty.hidden = visibleEvents.length > 0;
+
+    visibleEvents.forEach((event) => {
+      const isSelected = selectedIds.includes(event.id);
       const free = OFFLINE.seatsLeft(event);
       const isSoldOut = free === 0 && !isSelected;
 
@@ -115,7 +107,7 @@
           OFFLINE.el('span', { class: 'tag', text: event.category.toUpperCase() }),
           OFFLINE.el('span', { class: 'small text-muted', text: `${free} left` }),
         ]),
-        OFFLINE.el('h4', { class: 'h6 fw-bold mb-1', text: event.title }),
+        OFFLINE.el('h3', { class: 'h6 fw-bold mb-1', text: event.title }),
         OFFLINE.el('p', { class: 'small text-muted mb-2', text: `${OFFLINE.formatDate(event.date, { short: true })} · ${event.start}–${event.end}` }),
         OFFLINE.el('button', {
           type: 'button',
@@ -137,7 +129,8 @@
 
   /* ---------- Render Basket ---------- */
   const renderBasket = () => {
-    const selectedEvents = selectedEveningIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
+    const selectedIds = OFFLINE.plan.getIds();
+    const selectedEvents = selectedIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
     basketBadge.textContent = `${selectedEvents.length} selected`;
 
     basketList.replaceChildren();
@@ -148,9 +141,9 @@
       );
     } else {
       selectedEvents.forEach((event) => {
-        const item = OFFLINE.el('li', { class: 'basket-item d-flex justify-content-between align-items-center py-2 border-bottom' }, [
+        const item = OFFLINE.el('li', { class: 'basket-item d-flex justify-content-between align-items-center gap-2 py-2 border-bottom' }, [
           OFFLINE.el('div', {}, [
-            OFFLINE.el('strong', { class: 'd-block text-dark', text: event.title }),
+            OFFLINE.el('strong', { class: 'd-block basket-item-title', text: event.title }),
             OFFLINE.el('span', { class: 'small text-muted', text: `${OFFLINE.formatDate(event.date, { short: true })} · ${event.start}–${event.end} (${event.place})` }),
           ]),
           OFFLINE.el('button', {
@@ -165,14 +158,12 @@
       });
     }
 
-    // Totals
     const totalMinutes = selectedEvents.reduce((sum, e) => sum + OFFLINE.durationMinutes(e), 0);
     const totalHours = (totalMinutes / 60).toFixed(1).replace('.0', '');
     totalEveningsEl.textContent = selectedEvents.length;
     totalHoursEl.textContent = totalHours;
 
-    // Conflicts check
-    const conflicts = findConflicts(selectedEveningIds);
+    const conflicts = findConflicts(selectedIds);
     if (conflicts.length > 0) {
       const c = conflicts[0];
       conflictError.textContent = `Time conflict detected: "${c[0].title}" and "${c[1].title}" take place at the same date and overlapping hours. Please remove one.`;
@@ -183,15 +174,7 @@
     }
   };
 
-  /* ---------- Toggle Evening in Basket ---------- */
-  const toggleEveningInPlan = (id) => {
-    const idx = selectedEveningIds.indexOf(id);
-    if (idx === -1) {
-      selectedEveningIds.push(id);
-    } else {
-      selectedEveningIds.splice(idx, 1);
-    }
-    savePlanIds(selectedEveningIds);
+  const refreshPlanViews = () => {
     renderEveningSelectors();
     renderBasket();
   };
@@ -200,9 +183,16 @@
   const goToStep = (step) => {
     if (isWizardBusy || step === currentStep) return;
 
-    if (step === 2 && selectedEveningIds.length === 0) {
-      OFFLINE.toast('Please select at least one evening before continuing.');
-      return;
+    const selectedIds = OFFLINE.plan.getIds();
+    if (step === 2) {
+      if (selectedIds.length === 0) {
+        OFFLINE.toast('Please select at least one evening before continuing.');
+        return;
+      }
+      if (findConflicts(selectedIds).length > 0) {
+        OFFLINE.toast('Please resolve the time conflict before continuing.');
+        return;
+      }
     }
 
     isWizardBusy = true;
@@ -238,7 +228,7 @@
     if (/[^A-Za-z0-9]/.test(val)) score += 1;
 
     let width = 0;
-    let label = 'Too short';
+    let label = 'Use 8+ characters, mix letters and numbers.';
     let color = 'var(--error)';
 
     if (val.length > 0) {
@@ -264,26 +254,34 @@
 
   /* ---------- Display Generated Pass Card ---------- */
   const renderPassCard = (pass) => {
-    passTitle.textContent = pass.name;
-    passSerial.textContent = pass.serial;
-    passEveningsCount.textContent = `${pass.eveningIds.length} ${pass.eveningIds.length === 1 ? 'gathering' : 'gatherings'}`;
-
-    const events = pass.eveningIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
+    const ids = OFFLINE.plan.getIds();
+    const activeIds = ids.length > 0 ? ids : (pass.eveningIds || []);
+    const events = activeIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
     const totalMinutes = events.reduce((sum, e) => sum + OFFLINE.durationMinutes(e), 0);
+
+    passTitle.textContent = pass.name;
+    if (passContact) {
+      passContact.textContent = [pass.email, pass.phone].filter(Boolean).join(' · ');
+    }
+    passSerial.textContent = pass.serial;
+    passEveningsCount.textContent = OFFLINE.plural(events.length, 'gathering');
     passHours.textContent = `${(totalMinutes / 60).toFixed(1).replace('.0', '')} hours`;
-    passParty.textContent = `${pass.guests} ${pass.guests === 1 ? 'person' : 'people'}`;
+    passParty.textContent = OFFLINE.plural(pass.guests, 'person', 'people');
     passFirstDate.textContent = pass.firstVisitDate ? OFFLINE.formatDate(pass.firstVisitDate) : 'Not specified';
 
     passScheduleList.replaceChildren();
     events.forEach((ev) => {
       passScheduleList.append(
         OFFLINE.el('li', { class: 'pass-schedule-item' }, [
-          OFFLINE.el('strong', { text: ev.title }),
-          OFFLINE.el('span', { class: 'ms-2 text-muted', text: `· ${OFFLINE.formatDate(ev.date, { short: true })} (${ev.start}–${ev.end}) at ${ev.place}` }),
+          OFFLINE.el('div', {}, [
+            OFFLINE.el('strong', { text: ev.title }),
+            OFFLINE.el('span', { class: 'ms-2 text-muted', text: `· ${OFFLINE.formatDate(ev.date, { short: true })} (${ev.start}–${ev.end}) at ${ev.place}` }),
+          ]),
         ])
       );
     });
 
+    if (tabStep3) tabStep3.disabled = false;
     passSection.hidden = false;
     panelStep1.hidden = true;
     panelStep2.hidden = true;
@@ -296,8 +294,9 @@
   /* ---------- Generate Multi-Event .ics Calendar ---------- */
   const downloadIcs = () => {
     const pass = loadPass();
-    const ids = pass ? pass.eveningIds : selectedEveningIds;
-    const events = ids.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
+    const ids = OFFLINE.plan.getIds();
+    const activeIds = ids.length > 0 ? ids : (pass ? pass.eveningIds : []);
+    const events = activeIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
 
     if (events.length === 0) {
       OFFLINE.toast('No evenings in your plan to add to calendar.');
@@ -332,8 +331,7 @@
     });
 
     lines.push('END:VCALENDAR', '');
-    const icsContent = lines.join('\r\n');
-    OFFLINE.downloadText('offline-club-schedule.ics', icsContent, 'text/calendar');
+    OFFLINE.downloadText('offline-club-schedule.ics', lines.join('\r\n'), 'text/calendar');
     OFFLINE.toast('Schedule downloaded as .ics calendar reminder!');
   };
 
@@ -364,7 +362,8 @@
       ],
       consent: [rules.checked('Please tick the consent box to proceed.')],
     }, (values) => {
-      if (selectedEveningIds.length === 0) {
+      const ids = OFFLINE.plan.getIds();
+      if (ids.length === 0) {
         goToStep(1);
         OFFLINE.toast('Please select at least one gathering for your pass.');
         return false;
@@ -379,7 +378,7 @@
         firstVisitDate: values.firstVisitDate,
         guests: Number(values.guests),
         firstTime: values.firstTime === 'yes',
-        eveningIds: [...selectedEveningIds],
+        eveningIds: [...ids],
         createdAt: new Date().toISOString(),
       };
 
@@ -389,7 +388,6 @@
       return true;
     });
 
-    // Password visibility toggle
     togglePwBtn.addEventListener('click', () => {
       const isText = passwordInput.type === 'text';
       passwordInput.type = isText ? 'password' : 'text';
@@ -397,7 +395,6 @@
       togglePwBtn.setAttribute('aria-pressed', String(!isText));
     });
 
-    // Password strength indicator on typing
     passwordInput.addEventListener('input', () => {
       updatePasswordStrength(passwordInput.value);
     });
@@ -405,61 +402,72 @@
 
   /* ---------- Page Init & Events ---------- */
   $(function () {
-    selectedEveningIds = loadPlanIds();
-
-    // Check query param (?session=print)
     const params = new URLSearchParams(window.location.search);
     const sessionParam = params.get('session');
     if (sessionParam && OFFLINE.getGathering(sessionParam)) {
-      if (!selectedEveningIds.includes(sessionParam)) {
-        selectedEveningIds.push(sessionParam);
-        savePlanIds(selectedEveningIds);
-      }
+      OFFLINE.plan.add(sessionParam);
     }
 
-    renderEveningSelectors();
-    renderBasket();
+    refreshPlanViews();
     initPlannerForm();
 
-    // Check if user already has a saved pass
+    window.addEventListener('offline:plan-change', refreshPlanViews);
+
     const savedPass = loadPass();
-    if (savedPass && savedPass.eveningIds && savedPass.eveningIds.length > 0) {
+    if (savedPass && savedPass.eveningIds && savedPass.eveningIds.length > 0 && !savedPass.loggedOut) {
       renderPassCard(savedPass);
     }
 
-    // Step 1 grid buttons
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        activeCategory = btn.dataset.planFilter || 'all';
+        filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+        renderEveningSelectors();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener('input', OFFLINE.debounce(() => {
+        activeQuery = searchInput.value.trim().toLowerCase();
+        renderEveningSelectors();
+      }, 140));
+    }
+
+    if (btnResetFilter) {
+      btnResetFilter.addEventListener('click', () => {
+        activeCategory = 'all';
+        activeQuery = '';
+        if (searchInput) searchInput.value = '';
+        filterButtons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.planFilter === 'all')));
+        renderEveningSelectors();
+      });
+    }
+
     eveningsGrid.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-id]');
       if (btn) {
-        toggleEveningInPlan(btn.dataset.id);
+        OFFLINE.plan.toggle(btn.dataset.id);
       }
     });
 
-    // Basket remove button
     basketList.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-remove-basket-item');
       if (btn) {
-        toggleEveningInPlan(btn.dataset.id);
+        OFFLINE.plan.remove(btn.dataset.id);
       }
     });
 
-    // Clear basket
     btnClearBasket.addEventListener('click', () => {
-      selectedEveningIds = [];
-      savePlanIds([]);
-      renderEveningSelectors();
-      renderBasket();
+      OFFLINE.plan.clear();
       OFFLINE.toast('Your plan has been cleared.');
     });
 
-    // Wizard navigation
     btnStep1Next.addEventListener('click', () => goToStep(2));
     tabStep1.addEventListener('click', () => goToStep(1));
     tabStep2.addEventListener('click', () => goToStep(2));
     btnBackToStep1.addEventListener('click', () => goToStep(1));
     btnCancelToStep1.addEventListener('click', () => goToStep(1));
 
-    // Pass actions
     btnDownloadCalendar.addEventListener('click', downloadIcs);
 
     btnEditPass.addEventListener('click', () => {
@@ -469,12 +477,10 @@
 
     btnDeletePass.addEventListener('click', () => {
       removePass();
-      savePlanIds([]);
-      selectedEveningIds = [];
+      OFFLINE.plan.clear();
       plannerForm.reset();
       updatePasswordStrength('');
-      renderEveningSelectors();
-      renderBasket();
+      if (tabStep3) tabStep3.disabled = true;
 
       $(passSection).slideUp(OFFLINE.speed, () => {
         passSection.hidden = true;
@@ -484,4 +490,3 @@
     });
   });
 }(window.jQuery, window.OFFLINE));
-
