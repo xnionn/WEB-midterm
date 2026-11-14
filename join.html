@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Save your own OFFLINE gathering plan and download a calendar reminder.">
+  <meta name="description" content="Save your own OFFLINE gathering plan, manage your demo member pass, and download a calendar reminder.">
   <meta name="theme-color" content="#f5f2e9">
   <title>Make a plan — OFFLINE Club</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -29,7 +29,11 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navigation" aria-controls="site-navigation" aria-expanded="false" aria-label="Toggle navigation"><span class="menu-lines" aria-hidden="true"></span><span>Menu</span></button>
       <div class="collapse navbar-collapse" id="site-navigation">
         <div class="navbar-nav nav-links"><a class="nav-link" href="index.html">Home</a><a class="nav-link" href="gatherings.html">Gatherings</a><a class="nav-link" href="about.html">The club</a><a class="nav-link" href="fieldnotes.html">Field notes</a><a class="nav-link" href="toolkit.html">The toolkit</a></div>
-        <a class="button button-small nav-join" href="join.html" aria-current="page">Make a plan <span aria-hidden="true">↗</span></a>
+        <div class="nav-utilities">
+          <div class="nav-auth-area" id="nav-auth-area"><a class="nav-login-link" href="join.html#login">Log in</a></div>
+          <a class="button button-small nav-join" href="join.html" aria-current="page">Make a plan <span class="nav-plan-badge" id="nav-plan-count" hidden>0</span> <span aria-hidden="true">↗</span></a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark</span></button>
+        </div>
       </div>
     </nav>
   </header>
@@ -37,68 +41,100 @@
   <section class="container page-heading" aria-labelledby="join-title">
     <p class="eyebrow">A small plan for a good evening</p>
     <h1 class="display-title" id="join-title">Save yourself<br>some offline time.</h1>
-    <p class="lead-copy">Choose your evenings, customize your plan, and get your personal Offline Club pass.</p>
+    <p class="lead-copy">Choose your evenings, create or open your member pass, and keep your offline schedule ready in one place.</p>
   </section>
 
   <div class="container planner-layout">
     <div class="planner-main-column">
 
       <!-- Step Wizard Indicators -->
-      <nav class="wizard-steps d-flex gap-3 mb-4" aria-label="Planner steps">
+      <nav class="wizard-steps d-flex flex-wrap gap-2 gap-md-3 mb-4" aria-label="Planner steps">
         <button type="button" class="wizard-step-btn active" id="wizard-tab-1" aria-current="step">
           <span class="step-num">01</span>
           <span class="step-text">Choose evenings</span>
         </button>
         <button type="button" class="wizard-step-btn" id="wizard-tab-2">
           <span class="step-num">02</span>
-          <span class="step-text">Guest pass</span>
+          <span class="step-text">Sign up / Log in</span>
+        </button>
+        <button type="button" class="wizard-step-btn" id="wizard-tab-3" disabled>
+          <span class="step-num">03</span>
+          <span class="step-text">Profile &amp; pass</span>
         </button>
       </nav>
 
       <!-- STEP 1: Evening Selection & Basket -->
       <section class="wizard-panel active" id="wizard-step-1" aria-labelledby="step-1-title">
-        <div class="d-flex justify-content-between align-items-baseline mb-3">
-          <h2 class="form-step" id="step-1-title">01 / Choose your evenings</h2>
+        <div class="d-flex justify-content-between align-items-baseline mb-2">
+          <h2 class="form-step mb-0" id="step-1-title">01 / Choose your evenings</h2>
           <span class="meta" id="basket-badge">0 selected</span>
         </div>
-        <p class="form-hint mb-3">Add one or more sample evenings to your personal plan. We’ll watch out for overlapping times.</p>
+        <p class="form-hint mb-3">Add one or more sample evenings to your personal plan. We’ll watch out for overlapping times. Evenings saved from Home or Gatherings appear here automatically.</p>
+
+        <div class="planner-filter-bar mb-4">
+          <div class="session-filters" role="group" aria-label="Filter evenings by category">
+            <button type="button" class="filter-button" data-plan-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="filter-button" data-plan-filter="make" aria-pressed="false">Make</button>
+            <button type="button" class="filter-button" data-plan-filter="play" aria-pressed="false">Play</button>
+            <button type="button" class="filter-button" data-plan-filter="slow" aria-pressed="false">Slow down</button>
+          </div>
+          <div class="search-field planner-search-wrap">
+            <label class="visually-hidden" for="planner-search">Search evenings</label>
+            <input class="form-control" id="planner-search" type="search" placeholder="Search evening..." autocomplete="off">
+          </div>
+        </div>
 
         <!-- Dynamic evening list for the basket -->
         <div class="planner-evenings-grid mb-4" id="planner-evenings-list"></div>
+        <div class="empty-state mb-4" id="planner-empty" hidden>
+          <h3>Nothing matches that filter.</h3>
+          <p>No evening matches your search or category right now. Try another word or reset the filter.</p>
+          <button type="button" class="button button-outline" id="btn-reset-plan-filter">Show all evenings</button>
+        </div>
 
         <!-- Basket Summary Box -->
         <div class="basket-summary-card mb-4" id="basket-summary-card">
           <h3 class="basket-title">Your selected evenings</h3>
           <p class="field-error" id="basket-conflict-error" hidden></p>
           <ul class="basket-items-list" id="basket-items-list">
-            <li class="empty-basket-note">No evenings selected yet. Click "Add to plan" above.</li>
+            <li class="empty-basket-note">No evenings selected yet. Click "+ Add to plan" above.</li>
           </ul>
 
-          <div class="basket-totals d-flex flex-wrap justify-content-between align-items-center pt-3 border-top">
+          <div class="basket-totals d-flex flex-wrap justify-content-between align-items-center gap-3 pt-3 border-top">
             <div class="basket-stats">
               <span id="basket-total-evenings"><strong>0</strong> evenings</span> ·
               <span id="basket-total-hours"><strong>0</strong> hours of offline time</span>
             </div>
-            <div class="basket-actions d-flex gap-2">
+            <div class="basket-actions d-flex flex-wrap gap-2">
               <button type="button" class="button button-small button-outline" id="btn-clear-basket">Clear plan</button>
-              <button type="button" class="button button-small" id="btn-step-1-next">Continue to details ↗</button>
+              <button type="button" class="button button-small" id="btn-step-1-next">Continue to account &amp; pass <span aria-hidden="true">↗</span></button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- STEP 2: Registration Form -->
+      <!-- STEP 2: Sign Up & Log In -->
       <section class="wizard-panel" id="wizard-step-2" aria-labelledby="step-2-title" hidden>
-        <div class="d-flex justify-content-between align-items-baseline mb-3">
-          <h2 class="form-step" id="step-2-title">02 / Make it official</h2>
+        <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+          <h2 class="form-step mb-0" id="step-2-title">02 / Member account &amp; pass</h2>
           <button type="button" class="text-link" id="btn-back-to-step-1">← Change evenings</button>
         </div>
 
+        <div class="auth-tabs mb-3" role="group" aria-label="Account mode">
+          <button type="button" class="auth-tab-btn active" id="tab-signup" data-auth-tab="signup" aria-pressed="true">Create account &amp; pass (Sign Up)</button>
+          <button type="button" class="auth-tab-btn" id="tab-login" data-auth-tab="login" aria-pressed="false">Log in to saved pass</button>
+        </div>
+
+        <p class="demo-security-notice mb-4" role="note">
+          <strong>Demo notice:</strong> Accounts are stored locally in <code>localStorage</code> for this university project demonstration. Do not enter a real personal password.
+        </p>
+
+        <!-- Sign Up Form -->
         <form class="planner-form" id="planner-form" novalidate>
           <div class="row">
             <div class="col-md-6 form-field">
               <label class="form-label" for="planner-name">Your full name or nickname</label>
-              <input class="form-control" id="planner-name" name="name" type="text" placeholder="What should we call you?" autocomplete="given-name" maxlength="40">
+              <input class="form-control" id="planner-name" name="name" type="text" placeholder="What should we call you?" autocomplete="name" maxlength="40">
             </div>
             <div class="col-md-6 form-field">
               <label class="form-label" for="planner-email">Email address</label>
@@ -156,29 +192,57 @@
 
           <div class="form-check consent-check form-field">
             <input class="form-check-input" type="checkbox" id="planner-consent" name="consent">
-            <label class="form-check-label" for="planner-consent">I understand this is a sample student project. Passwords are never sent over a network.</label>
+            <label class="form-check-label" for="planner-consent">I understand this is a sample student project and demo passwords are saved in browser storage only.</label>
           </div>
 
-          <div class="d-flex gap-3 align-items-center mt-3">
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
             <button class="button" type="submit" id="btn-submit-pass">Generate my Offline Pass <span aria-hidden="true">↗</span></button>
             <button type="button" class="button button-outline" id="btn-cancel-to-step-1">Back</button>
           </div>
 
-          <p class="form-notice">Your plan and pass are kept securely in your local browser storage. You can delete or edit them at any time.</p>
+          <p class="form-notice">Your plan and member pass stay in this browser’s localStorage. You can edit, log out, or delete them anytime.</p>
+        </form>
+
+        <!-- Log In Form -->
+        <form class="planner-form" id="login-form" novalidate hidden>
+          <p class="text-muted small mb-4">Log in with the email and password you registered on this browser to load your saved Member Profile and Guest Pass.</p>
+
+          <div class="row">
+            <div class="col-md-6 form-field">
+              <label class="form-label" for="login-email">Registered email address</label>
+              <input class="form-control" id="login-email" name="email" type="email" placeholder="name@example.com" autocomplete="email" inputmode="email">
+            </div>
+            <div class="col-md-6 form-field">
+              <div class="d-flex justify-content-between align-items-center">
+                <label class="form-label" for="login-password">Password</label>
+                <button type="button" class="btn-toggle-pw" id="toggle-login-pw" aria-pressed="false">Show</button>
+              </div>
+              <input class="form-control" id="login-password" name="password" type="password" autocomplete="current-password">
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3 align-items-center mt-2">
+            <button class="button" type="submit" id="btn-submit-login">Log in to my profile <span aria-hidden="true">↗</span></button>
+            <button type="button" class="button button-outline" id="btn-switch-to-signup">Need an account? Sign up</button>
+          </div>
         </form>
       </section>
 
-      <!-- OFFLINE PASS CARD (The memorable standing solution) -->
-      <section class="pass-section mt-4" id="pass-section" aria-labelledby="pass-title" hidden tabindex="-1">
+      <!-- STEP 3: Member Profile & Guest Pass -->
+      <section class="pass-section mt-2" id="pass-section" aria-labelledby="pass-title" hidden tabindex="-1">
         <div class="pass-card" id="pass-card">
-          <div class="pass-header d-flex justify-content-between align-items-start">
+          <div class="pass-header d-flex flex-wrap justify-content-between align-items-start gap-3">
             <div>
-              <span class="tag">OFFLINE CLUB GUEST PASS</span>
+              <span class="tag">MEMBER PROFILE &amp; GUEST PASS</span>
               <h2 id="pass-title" class="pass-name">Your Name</h2>
+              <p class="pass-contact" id="pass-contact"></p>
             </div>
-            <div class="pass-number-badge">
-              <span class="pass-serial-label">PASS #</span>
-              <span class="pass-serial" id="pass-serial">OFF-2026-0000</span>
+            <div class="pass-badge-wrap d-flex align-items-center gap-3">
+              <img src="assets/images/pass-emblem.svg" alt="OFFLINE Club Guest Pass emblem" width="52" height="52" class="pass-emblem-img">
+              <div class="pass-number-badge">
+                <span class="pass-serial-label">PASS #</span>
+                <span class="pass-serial" id="pass-serial">OFF-2026-0000</span>
+              </div>
             </div>
           </div>
 
@@ -200,6 +264,14 @@
                 <dt>First visit date</dt>
                 <dd id="pass-first-date">Not specified</dd>
               </div>
+              <div>
+                <dt>Evening finder match</dt>
+                <dd id="pass-quiz-match">Not taken yet</dd>
+              </div>
+              <div>
+                <dt>Saved field notes</dt>
+                <dd id="pass-notes-count">0 saved notes</dd>
+              </div>
             </dl>
 
             <div class="pass-schedule mt-3 pt-3 border-top">
@@ -209,11 +281,12 @@
           </div>
 
           <div class="pass-footer d-flex flex-wrap gap-2 justify-content-between align-items-center pt-3 border-top">
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
               <button class="button button-small" type="button" id="btn-download-calendar">Download .ics calendar <span aria-hidden="true">↓</span></button>
-              <button class="button button-small button-outline" type="button" id="btn-edit-pass">Edit plan</button>
+              <button class="button button-small button-outline" type="button" id="btn-edit-pass">Edit plan / profile</button>
+              <button class="button button-small button-outline" type="button" id="btn-logout-pass">Log out</button>
             </div>
-            <button class="plan-clear" type="button" id="btn-delete-pass">Delete this pass</button>
+            <button class="plan-clear" type="button" id="btn-delete-pass">Delete account &amp; pass</button>
           </div>
         </div>
       </section>
