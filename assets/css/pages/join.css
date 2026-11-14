@@ -1,25 +1,97 @@
-/* Make a plan / Join page styles: 3-step wizard, filters, basket, auth tabs, password meter, and Member Profile & Pass */
+/* Make a plan / Join page styles: hero accents, 3-step wizard, category-coded basket, auth tabs, and Member Profile & Pass */
+
+:root {
+  --cat-make-stroke:#4f6d46;
+  --cat-play-stroke:#d84315;
+  --cat-slow-stroke:#46637f;
+}
+
+[data-theme="dark"] {
+  --cat-make-stroke:#9bbf8b;
+  --cat-play-stroke:#ff7a52;
+  --cat-slow-stroke:#8fb2cf;
+}
+
+/* Hero Accents & Vibe Legend */
+.join-title-accent {
+  color:var(--accent-text);
+}
+
+.join-vibe-pills {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
+}
+
+.vibe-pill {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border:1px solid var(--line-strong);
+  border-radius:3px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink);
+}
+
+.vibe-dot {
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+
+.vibe-make {
+  background:var(--art-make-bg);
+}
+
+.vibe-make .vibe-dot {
+  background:var(--cat-make-stroke);
+}
+
+.vibe-play {
+  background:var(--art-play-bg);
+}
+
+.vibe-play .vibe-dot {
+  background:var(--cat-play-stroke);
+}
+
+.vibe-slow {
+  background:var(--art-slow-bg);
+}
+
+.vibe-slow .vibe-dot {
+  background:var(--cat-slow-stroke);
+}
 
 /* Wizard Navigation Tabs */
 .wizard-steps {
   border-bottom:1px solid var(--line);
-  padding-bottom:12px;
+  padding-bottom:16px;
 }
 
 .wizard-step-btn {
-  background:transparent;
-  border:0;
+  background:var(--white);
+  border:1px solid var(--line-strong);
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:10px;
   font-family:var(--heading);
   font-size:14px;
   color:var(--muted);
   cursor:pointer;
-  padding:6px 12px;
+  padding:8px 14px;
   min-height:44px;
-  border-radius:2px;
-  transition:color 150ms ease,background-color 150ms ease;
+  border-radius:3px;
+  transition:color 150ms ease-out,background-color 150ms ease-out,border-color 150ms ease-out,box-shadow 150ms ease-out;
+}
+
+.wizard-step-btn:hover:not(:disabled) {
+  border-color:var(--ink);
+  color:var(--ink);
 }
 
 .wizard-step-btn:disabled {
@@ -30,20 +102,25 @@
 .wizard-step-btn .step-num {
   font-weight:700;
   font-size:12px;
-  background:var(--line);
+  background:var(--surface-alt);
   color:var(--ink);
-  padding:2px 6px;
+  border:1px solid var(--line-strong);
+  padding:2px 7px;
   border-radius:2px;
 }
 
 .wizard-step-btn.active {
   color:var(--ink);
   font-weight:700;
+  background:var(--accent-soft);
+  border-color:var(--ink);
+  box-shadow:3px 3px 0 var(--ink);
 }
 
 .wizard-step-btn.active .step-num {
-  background:var(--ink);
-  color:var(--paper);
+  background:var(--accent);
+  color:var(--poster-ink);
+  border-color:var(--poster-ink);
 }
 
 /* Step 1 Filter & Search Bar */
@@ -70,10 +147,29 @@
 .planner-choice-card {
   background:var(--white);
   border:1px solid var(--line);
+  border-left-width:4px;
   display:flex;
   border-radius:2px;
   overflow:hidden;
-  transition:border-color 150ms ease,box-shadow 150ms ease;
+  transition:border-color 150ms ease-out,box-shadow 150ms ease-out,transform 150ms ease-out,background-color 150ms ease-out;
+}
+
+.planner-choice-card.card-cat-make {
+  border-left-color:var(--cat-make-stroke);
+}
+
+.planner-choice-card.card-cat-play {
+  border-left-color:var(--cat-play-stroke);
+}
+
+.planner-choice-card.card-cat-slow {
+  border-left-color:var(--cat-slow-stroke);
+}
+
+.planner-choice-card:hover {
+  border-color:var(--ink);
+  box-shadow:5px 5px 0 var(--card-shadow);
+  transform:translate(-2px,-2px);
 }
 
 .planner-choice-card .session-art {
@@ -93,17 +189,50 @@
   height:90px;
 }
 
+.cat-badge {
+  padding:3px 8px;
+  border-radius:2px;
+  border:1px solid var(--line-strong);
+  color:var(--ink);
+  font-weight:700;
+}
+
+.cat-badge-make {
+  background:var(--art-make-bg);
+}
+
+.cat-badge-play {
+  background:var(--art-play-bg);
+}
+
+.cat-badge-slow {
+  background:var(--art-slow-bg);
+}
+
 .planner-choice-card.is-chosen {
+  background:var(--accent-soft);
   border-color:var(--accent);
-  box-shadow:4px 4px 0 var(--accent);
+  border-left-color:var(--accent);
+  box-shadow:5px 5px 0 var(--accent);
 }
 
 /* Basket summary card */
 .basket-summary-card {
-  background:var(--paper);
+  background:var(--white);
   border:2px solid var(--ink);
+  border-top:6px solid var(--accent);
+  box-shadow:6px 6px 0 var(--card-shadow);
   padding:22px 26px;
   border-radius:0;
+}
+
+#basket-badge {
+  background:var(--accent);
+  color:var(--poster-ink);
+  padding:4px 10px;
+  border-radius:2px;
+  font-weight:700;
+  letter-spacing:.04em;
 }
 
 .basket-title {
@@ -244,7 +373,7 @@
 .pass-card {
   background:var(--white);
   border:2px solid var(--ink);
-  padding:34px;
+  padding:30px;
   position:relative;
   box-shadow:8px 8px 0 var(--ink);
 }
@@ -275,9 +404,17 @@
   transform:translateY(-50%);
 }
 
+.pass-header {
+  background:var(--accent-soft);
+  border:1px solid var(--line-strong);
+  border-left:5px solid var(--accent);
+  padding:18px 20px;
+  border-radius:2px;
+}
+
 .pass-name {
   font-family:var(--heading);
-  font-size:36px;
+  font-size:34px;
   letter-spacing:-.04em;
   margin:10px 0 0;
   word-break:break-word;
@@ -318,8 +455,19 @@
 .pass-grid {
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:18px 16px;
+  gap:14px;
   margin:0;
+}
+
+.pass-grid > div {
+  background:var(--surface-alt);
+  border:1px solid var(--line);
+  padding:12px 14px;
+  border-radius:2px;
+}
+
+.pass-grid > div:nth-child(-n+2) {
+  border-top:3px solid var(--accent);
 }
 
 .pass-grid dt {
@@ -355,7 +503,58 @@
   border-bottom:1px dashed var(--line);
 }
 
+/* Sidebar Mini-Poster Stamp */
+.planner-aside {
+  overflow:hidden;
+}
+
+.aside-ticket-stamp {
+  background:var(--accent);
+  color:var(--poster-ink);
+  border:1.5px solid var(--poster-ink);
+  padding:16px 18px;
+  box-shadow:4px 5px 0 var(--card-shadow);
+  transform:rotate(-1.5deg);
+  margin:0 4px 26px;
+}
+
+.aside-stamp-top,
+.aside-stamp-bottom {
+  display:flex;
+  justify-content:space-between;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+
+.aside-stamp-top {
+  border-bottom:1px solid var(--poster-line);
+  padding-bottom:8px;
+}
+
+.aside-stamp-headline {
+  font-family:var(--heading);
+  font-size:28px;
+  font-weight:700;
+  line-height:.95;
+  letter-spacing:-.05em;
+  margin:14px 0;
+  color:var(--poster-ink);
+}
+
+.aside-stamp-bottom {
+  border-top:1px solid var(--poster-line);
+  padding-top:8px;
+}
+
 /* Responsive */
+@media(prefers-reduced-motion:reduce) {
+  .planner-choice-card:hover {
+    transform:none;
+  }
+}
+
 @media(max-width:991.98px) {
   .planner-evenings-grid {
     grid-template-columns:1fr;
@@ -393,11 +592,14 @@
     margin-top:-1px;
   }
   .pass-card {
-    padding:22px 18px;
+    padding:20px 16px;
     box-shadow:5px 5px 0 var(--ink);
   }
+  .pass-header {
+    padding:14px 16px;
+  }
   .pass-name {
-    font-size:28px;
+    font-size:26px;
   }
   .pass-badge-wrap {
     width:100%;
@@ -409,5 +611,9 @@
   .pass-schedule-item {
     flex-wrap:wrap;
     gap:4px 10px;
+  }
+  .aside-ticket-stamp {
+    transform:none;
+    margin:0 0 22px;
   }
 }

@@ -126,8 +126,8 @@
       const isSoldOut = free === 0 && !isSelected;
 
       const copy = OFFLINE.el('div', { class: 'p-3 flex-grow-1 d-flex flex-column' }, [
-        OFFLINE.el('div', { class: 'd-flex justify-content-between mb-1' }, [
-          OFFLINE.el('span', { class: 'tag', text: event.category.toUpperCase() }),
+        OFFLINE.el('div', { class: 'd-flex justify-content-between align-items-center mb-2' }, [
+          OFFLINE.el('span', { class: `tag cat-badge cat-badge-${event.category}`, text: event.category.toUpperCase() }),
           OFFLINE.el('span', { class: 'small text-muted', text: `${free} left` }),
         ]),
         OFFLINE.el('h3', { class: 'h6 fw-bold mb-1', text: event.title }),
@@ -144,7 +144,7 @@
 
       eveningsGrid.append(
         OFFLINE.el('article', {
-          class: `planner-choice-card ${isSelected ? 'is-chosen' : ''}`,
+          class: `planner-choice-card card-cat-${event.category} ${isSelected ? 'is-chosen' : ''}`,
         }, [OFFLINE.categoryArt(event.category), copy])
       );
     });
