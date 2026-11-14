@@ -1,17 +1,29 @@
-/* Make a plan page: Step 1 synced evening basket, category/search filters, and interval conflict detection.
- * Uses shared OFFLINE.plan API (core.js) and OFFLINE.gatherings (data/gatherings.js). */
+/* Make a plan page: synced evening basket, filters, interval conflict detection,
+ * 3-step wizard with Sign Up / Log In verification, Member Profile & Guest Pass, and .ics export.
+ * Integrates with OFFLINE.plan, OFFLINE.account, OFFLINE.bookmarks (core.js) and OFFLINE.gatherings. */
 'use strict';
 
 (function ($, OFFLINE) {
-  const PASS_KEY = 'offline-pass-v1';
+  const QUIZ_KEY = 'offline-quiz-result-v1';
+  const QUIZ_LABELS = {
+    make: 'Make · A hands-on evening',
+    play: 'Play · Games & new faces',
+    slow: 'Slow down · Unhurried & warm',
+  };
 
-  // Elements
-  const tabStep1 = document.querySelector('#wizard-tab-1');
-  const tabStep2 = document.querySelector('#wizard-tab-2');
-  const tabStep3 = document.querySelector('#wizard-tab-3');
-  const panelStep1 = document.querySelector('#wizard-step-1');
-  const panelStep2 = document.querySelector('#wizard-step-2');
+  // Wizard tabs & panels
+  const wizardTabs = [
+    document.querySelector('#wizard-tab-1'),
+    document.querySelector('#wizard-tab-2'),
+    document.querySelector('#wizard-tab-3'),
+  ];
+  const wizardPanels = [
+    document.querySelector('#wizard-step-1'),
+    document.querySelector('#wizard-step-2'),
+    document.querySelector('#pass-section'),
+  ];
 
+  // Step 1 filter & basket elements
   const filterButtons = Array.from(document.querySelectorAll('[data-plan-filter]'));
   const searchInput = document.querySelector('#planner-search');
   const eveningsGrid = document.querySelector('#planner-evenings-list');
@@ -28,15 +40,20 @@
   const btnBackToStep1 = document.querySelector('#btn-back-to-step-1');
   const btnCancelToStep1 = document.querySelector('#btn-cancel-to-step-1');
 
-  // Form & Password
+  // Step 2 auth tabs & forms
+  const tabSignup = document.querySelector('#tab-signup');
+  const tabLogin = document.querySelector('#tab-login');
   const plannerForm = document.querySelector('#planner-form');
+  const loginForm = document.querySelector('#login-form');
+  const btnSwitchToSignup = document.querySelector('#btn-switch-to-signup');
   const passwordInput = document.querySelector('#planner-password');
   const togglePwBtn = document.querySelector('#toggle-pw');
+  const loginPasswordInput = document.querySelector('#login-password');
+  const toggleLoginPwBtn = document.querySelector('#toggle-login-pw');
   const passwordMeterBar = document.querySelector('#password-meter-bar');
   const passwordMeterText = document.querySelector('#password-meter-text');
 
-  // Pass section
-  const passSection = document.querySelector('#pass-section');
+  // Step 3 pass elements
   const passSerial = document.querySelector('#pass-serial');
   const passTitle = document.querySelector('#pass-title');
   const passContact = document.querySelector('#pass-contact');
@@ -44,19 +61,28 @@
   const passHours = document.querySelector('#pass-hours');
   const passParty = document.querySelector('#pass-party');
   const passFirstDate = document.querySelector('#pass-first-date');
+  const passQuizMatch = document.querySelector('#pass-quiz-match');
+  const passNotesCount = document.querySelector('#pass-notes-count');
   const passScheduleList = document.querySelector('#pass-schedule-list');
   const btnDownloadCalendar = document.querySelector('#btn-download-calendar');
   const btnEditPass = document.querySelector('#btn-edit-pass');
+  const btnLogoutPass = document.querySelector('#btn-logout-pass');
   const btnDeletePass = document.querySelector('#btn-delete-pass');
 
   let currentStep = 1;
-  let isWizardBusy = false;
+  let stepToken = 0;
+  let activeAuthMode = 'signup';
   let activeCategory = 'all';
   let activeQuery = '';
+  let isDeletingAccount = false;
 
-  const loadPass = () => OFFLINE.storage.get(PASS_KEY, null);
-  const savePass = (pass) => OFFLINE.storage.set(PASS_KEY, pass);
-  const removePass = () => OFFLINE.storage.remove(PASS_KEY);
+  const SIGNUP_FIELDS = ['name', 'email', 'phone', 'password', 'confirm', 'firstVisitDate', 'guests', 'consent'];
+  const LOGIN_FIELDS = ['email', 'password'];
+
+  const formatHours = (minutes) => {
+    const num = (minutes / 60).toFixed(1).replace('.0', '');
+    return `${num} ${num === '1' ? 'hour' : 'hours'}`;
+  };
 
   /* ---------- Conflict Detection ---------- */
   const checkTimeConflict = (eventA, eventB) => {
@@ -92,15 +118,12 @@
     const selectedIds = OFFLINE.plan.getIds();
     const visibleEvents = OFFLINE.gatherings.filter(matchesFilters);
     eveningsGrid.replaceChildren();
-
     plannerEmpty.hidden = visibleEvents.length > 0;
 
     visibleEvents.forEach((event) => {
       const isSelected = selectedIds.includes(event.id);
       const free = OFFLINE.seatsLeft(event);
       const isSoldOut = free === 0 && !isSelected;
-
-      const art = OFFLINE.categoryArt(event.category);
 
       const copy = OFFLINE.el('div', { class: 'p-3 flex-grow-1 d-flex flex-column' }, [
         OFFLINE.el('div', { class: 'd-flex justify-content-between mb-1' }, [
@@ -119,11 +142,11 @@
         }),
       ]);
 
-      const card = OFFLINE.el('article', {
-        class: `planner-choice-card ${isSelected ? 'is-chosen' : ''}`,
-      }, [art, copy]);
-
-      eveningsGrid.append(card);
+      eveningsGrid.append(
+        OFFLINE.el('article', {
+          class: `planner-choice-card ${isSelected ? 'is-chosen' : ''}`,
+        }, [OFFLINE.categoryArt(event.category), copy])
+      );
     });
   };
 
@@ -134,34 +157,33 @@
     basketBadge.textContent = `${selectedEvents.length} selected`;
 
     basketList.replaceChildren();
-
     if (selectedEvents.length === 0) {
       basketList.append(
         OFFLINE.el('li', { class: 'empty-basket-note', text: 'No evenings selected yet. Click "+ Add to plan" on any evening above.' })
       );
     } else {
       selectedEvents.forEach((event) => {
-        const item = OFFLINE.el('li', { class: 'basket-item d-flex justify-content-between align-items-center gap-2 py-2 border-bottom' }, [
-          OFFLINE.el('div', {}, [
-            OFFLINE.el('strong', { class: 'd-block basket-item-title', text: event.title }),
-            OFFLINE.el('span', { class: 'small text-muted', text: `${OFFLINE.formatDate(event.date, { short: true })} · ${event.start}–${event.end} (${event.place})` }),
-          ]),
-          OFFLINE.el('button', {
-            type: 'button',
-            class: 'btn-remove-basket-item',
-            'data-id': event.id,
-            'aria-label': `Remove ${event.title} from plan`,
-            text: '× Remove',
-          }),
-        ]);
-        basketList.append(item);
+        basketList.append(
+          OFFLINE.el('li', { class: 'basket-item d-flex justify-content-between align-items-center gap-2 py-2 border-bottom' }, [
+            OFFLINE.el('div', {}, [
+              OFFLINE.el('strong', { class: 'd-block basket-item-title', text: event.title }),
+              OFFLINE.el('span', { class: 'small text-muted', text: `${OFFLINE.formatDate(event.date, { short: true })} · ${event.start}–${event.end} (${event.place})` }),
+            ]),
+            OFFLINE.el('button', {
+              type: 'button',
+              class: 'btn-remove-basket-item',
+              'data-id': event.id,
+              'aria-label': `Remove ${event.title} from plan`,
+              text: '× Remove',
+            }),
+          ])
+        );
       });
     }
 
     const totalMinutes = selectedEvents.reduce((sum, e) => sum + OFFLINE.durationMinutes(e), 0);
-    const totalHours = (totalMinutes / 60).toFixed(1).replace('.0', '');
     totalEveningsEl.textContent = selectedEvents.length;
-    totalHoursEl.textContent = totalHours;
+    totalHoursEl.textContent = (totalMinutes / 60).toFixed(1).replace('.0', '');
 
     const conflicts = findConflicts(selectedIds);
     if (conflicts.length > 0) {
@@ -174,51 +196,100 @@
     }
   };
 
-  const refreshPlanViews = () => {
-    renderEveningSelectors();
-    renderBasket();
+  /* ---------- Auth Tab Switching ---------- */
+  const switchAuthTab = (mode) => {
+    activeAuthMode = mode === 'login' ? 'login' : 'signup';
+    const isLogin = activeAuthMode === 'login';
+
+    tabSignup.classList.toggle('active', !isLogin);
+    tabSignup.setAttribute('aria-pressed', String(!isLogin));
+    tabLogin.classList.toggle('active', isLogin);
+    tabLogin.setAttribute('aria-pressed', String(isLogin));
+
+    plannerForm.hidden = isLogin;
+    loginForm.hidden = !isLogin;
+
+    SIGNUP_FIELDS.forEach((name) => OFFLINE.clearFormError(plannerForm, name));
+    LOGIN_FIELDS.forEach((name) => OFFLINE.clearFormError(loginForm, name));
   };
 
   /* ---------- Wizard Step Navigation ---------- */
-  const goToStep = (step) => {
-    if (isWizardBusy || step === currentStep) return;
+  const syncStep3TabState = () => {
+    const user = OFFLINE.account.current();
+    if (wizardTabs[2]) {
+      wizardTabs[2].disabled = !user;
+    }
+  };
 
-    const selectedIds = OFFLINE.plan.getIds();
-    if (step === 2) {
-      if (selectedIds.length === 0) {
-        OFFLINE.toast('Please select at least one evening before continuing.');
-        return;
+  const goToStep = (step, { instant = false, focus = true } = {}) => {
+    if (step === 3 && !OFFLINE.account.current()) return;
+
+    const toPanel = wizardPanels[step - 1];
+    if (!toPanel) return;
+
+    stepToken += 1;
+    const myToken = stepToken;
+    currentStep = step;
+    syncStep3TabState();
+
+    wizardTabs.forEach((tab, idx) => {
+      if (!tab) return;
+      const active = idx + 1 === step;
+      tab.classList.toggle('active', active);
+      tab.setAttribute('aria-current', active ? 'step' : 'false');
+    });
+
+    const focusTarget = () => {
+      if (myToken !== stepToken || !focus) return;
+      if (step === 2) {
+        const firstField = activeAuthMode === 'login' ? loginForm.elements.email : plannerForm.elements.name;
+        if (firstField) firstField.focus();
+      } else if (step === 3) {
+        toPanel.focus();
       }
-      if (findConflicts(selectedIds).length > 0) {
-        OFFLINE.toast('Please resolve the time conflict before continuing.');
-        return;
-      }
+    };
+
+    const otherPanels = wizardPanels.filter((p) => p && p !== toPanel);
+    if (instant) {
+      otherPanels.forEach((p) => { $(p).stop(true, false).hide(); p.hidden = true; });
+      toPanel.hidden = false;
+      $(toPanel).stop(true, false).show();
+      focusTarget();
+      return;
     }
 
-    isWizardBusy = true;
-    currentStep = step;
-
-    tabStep1.classList.toggle('active', step === 1);
-    tabStep1.setAttribute('aria-current', step === 1 ? 'step' : 'false');
-    tabStep2.classList.toggle('active', step === 2);
-    tabStep2.setAttribute('aria-current', step === 2 ? 'step' : 'false');
-
-    const fromPanel = step === 1 ? panelStep2 : panelStep1;
-    const toPanel = step === 1 ? panelStep1 : panelStep2;
-
-    $(fromPanel).stop(true, true).fadeOut(OFFLINE.speed, () => {
-      fromPanel.hidden = true;
+    const visibleFrom = otherPanels.find((p) => !p.hidden);
+    if (!visibleFrom) {
+      otherPanels.forEach((p) => { $(p).stop(true, false).hide(); p.hidden = true; });
       toPanel.hidden = false;
-      $(toPanel).hide().fadeIn(OFFLINE.speed, () => {
-        isWizardBusy = false;
-        if (step === 2) {
-          plannerForm.elements.name.focus();
-        }
-      });
+      $(toPanel).stop(true, false).hide().fadeIn(OFFLINE.speed, focusTarget);
+      return;
+    }
+
+    otherPanels.filter((p) => p !== visibleFrom).forEach((p) => {
+      $(p).stop(true, false).hide();
+      p.hidden = true;
+    });
+
+    $(visibleFrom).stop(true, false).fadeOut(OFFLINE.speed, () => {
+      if (myToken !== stepToken) return;
+      visibleFrom.hidden = true;
+      toPanel.hidden = false;
+      $(toPanel).stop(true, false).hide().fadeIn(OFFLINE.speed, focusTarget);
     });
   };
 
-  /* ---------- Password Strength Calculation & Meter ---------- */
+  /* ---------- Password Helpers ---------- */
+  const bindPasswordToggle = (input, button) => {
+    if (!input || !button) return;
+    button.addEventListener('click', () => {
+      const isText = input.type === 'text';
+      input.type = isText ? 'password' : 'text';
+      button.textContent = isText ? 'Show' : 'Hide';
+      button.setAttribute('aria-pressed', String(!isText));
+    });
+  };
+
   const updatePasswordStrength = (val) => {
     let score = 0;
     if (val.length >= 8) score += 1;
@@ -252,52 +323,82 @@
     passwordMeterText.textContent = label;
   };
 
-  /* ---------- Display Generated Pass Card ---------- */
-  const renderPassCard = (pass) => {
+  /* ---------- Member Profile & Guest Pass ---------- */
+  const getQuizMatchLabel = () => {
+    const saved = OFFLINE.storage.get(QUIZ_KEY, null);
+    if (!saved || typeof saved !== 'object') return 'Not taken yet';
+    if (saved.winner && QUIZ_LABELS[saved.winner]) return QUIZ_LABELS[saved.winner];
+    if (saved.label) return saved.title ? `${saved.label} · ${saved.title}` : saved.label;
+    return 'Not taken yet';
+  };
+
+  const renderPassMeta = () => {
+    if (passQuizMatch) passQuizMatch.textContent = getQuizMatchLabel();
+    if (passNotesCount) passNotesCount.textContent = OFFLINE.plural(OFFLINE.bookmarks.getIds().length, 'saved note');
+  };
+
+  const renderPassCard = (account) => {
+    if (!account) return;
     const ids = OFFLINE.plan.getIds();
-    const activeIds = ids.length > 0 ? ids : (pass.eveningIds || []);
-    const events = activeIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
+    const events = ids.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
     const totalMinutes = events.reduce((sum, e) => sum + OFFLINE.durationMinutes(e), 0);
 
-    passTitle.textContent = pass.name;
-    if (passContact) {
-      passContact.textContent = [pass.email, pass.phone].filter(Boolean).join(' · ');
-    }
-    passSerial.textContent = pass.serial;
+    passTitle.textContent = account.name;
+    passContact.textContent = [account.email, account.phone].filter(Boolean).join(' · ');
+    passSerial.textContent = account.serial || 'OFF-2026-0000';
     passEveningsCount.textContent = OFFLINE.plural(events.length, 'gathering');
-    passHours.textContent = `${(totalMinutes / 60).toFixed(1).replace('.0', '')} hours`;
-    passParty.textContent = OFFLINE.plural(pass.guests, 'person', 'people');
-    passFirstDate.textContent = pass.firstVisitDate ? OFFLINE.formatDate(pass.firstVisitDate) : 'Not specified';
+    passHours.textContent = formatHours(totalMinutes);
+
+    const guests = Number(account.guests) || 1;
+    passParty.textContent = `${OFFLINE.plural(guests, 'person', 'people')}${account.firstTime ? ' (First-time guest)' : ''}`;
+    passFirstDate.textContent = account.firstVisitDate ? OFFLINE.formatDate(account.firstVisitDate) : 'Not specified';
+    renderPassMeta();
 
     passScheduleList.replaceChildren();
-    events.forEach((ev) => {
+    if (events.length === 0) {
       passScheduleList.append(
-        OFFLINE.el('li', { class: 'pass-schedule-item' }, [
-          OFFLINE.el('div', {}, [
-            OFFLINE.el('strong', { text: ev.title }),
-            OFFLINE.el('span', { class: 'ms-2 text-muted', text: `· ${OFFLINE.formatDate(ev.date, { short: true })} (${ev.start}–${ev.end}) at ${ev.place}` }),
-          ]),
-        ])
+        OFFLINE.el('li', { class: 'empty-basket-note', text: 'No evenings in your schedule yet. Click "Edit plan / profile" or add some on Gatherings.' })
       );
-    });
+    } else {
+      events.forEach((ev) => {
+        passScheduleList.append(
+          OFFLINE.el('li', { class: 'pass-schedule-item' }, [
+            OFFLINE.el('div', {}, [
+              OFFLINE.el('strong', { text: ev.title }),
+              OFFLINE.el('span', { class: 'ms-2 text-muted', text: `· ${OFFLINE.formatDate(ev.date, { short: true })} (${ev.start}–${ev.end}) at ${ev.place}` }),
+            ]),
+            OFFLINE.el('button', {
+              type: 'button',
+              class: 'btn-remove-basket-item',
+              'data-pass-remove': ev.id,
+              'aria-label': `Remove ${ev.title} from pass schedule`,
+              text: '× Remove',
+            }),
+          ])
+        );
+      });
+    }
+    syncStep3TabState();
+  };
 
-    if (tabStep3) tabStep3.disabled = false;
-    passSection.hidden = false;
-    panelStep1.hidden = true;
-    panelStep2.hidden = true;
-
-    $(passSection).stop(true, true).hide().slideDown(OFFLINE.speed * 2, () => {
-      passSection.focus();
-    });
+  const prefillSignupForm = (account) => {
+    if (!account) return;
+    plannerForm.elements.name.value = account.name || '';
+    plannerForm.elements.email.value = account.email || '';
+    plannerForm.elements.phone.value = account.phone || '';
+    plannerForm.elements.firstVisitDate.value = account.firstVisitDate || '';
+    plannerForm.elements.guests.value = String(account.guests || 1);
+    const firstYes = plannerForm.querySelector('#first-yes');
+    const firstNo = plannerForm.querySelector('#first-no');
+    if (firstYes && firstNo) {
+      firstYes.checked = account.firstTime !== false;
+      firstNo.checked = account.firstTime === false;
+    }
   };
 
   /* ---------- Generate Multi-Event .ics Calendar ---------- */
   const downloadIcs = () => {
-    const pass = loadPass();
-    const ids = OFFLINE.plan.getIds();
-    const activeIds = ids.length > 0 ? ids : (pass ? pass.eveningIds : []);
-    const events = activeIds.map((id) => OFFLINE.getGathering(id)).filter(Boolean);
-
+    const events = OFFLINE.plan.getIds().map((id) => OFFLINE.getGathering(id)).filter(Boolean);
     if (events.length === 0) {
       OFFLINE.toast('No evenings in your plan to add to calendar.');
       return;
@@ -313,15 +414,12 @@
 
     events.forEach((ev) => {
       const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-      const dtStart = OFFLINE.toUtcStamp(ev.date, ev.start);
-      const dtEnd = OFFLINE.toUtcStamp(ev.date, ev.end);
-
       lines.push(
         'BEGIN:VEVENT',
         `UID:offline-${ev.id}-${ev.date}@offline.example`,
         `DTSTAMP:${stamp}`,
-        `DTSTART:${dtStart}`,
-        `DTEND:${dtEnd}`,
+        `DTSTART:${OFFLINE.toUtcStamp(ev.date, ev.start)}`,
+        `DTEND:${OFFLINE.toUtcStamp(ev.date, ev.end)}`,
         `SUMMARY:OFFLINE Club · ${ev.title}`,
         `LOCATION:${ev.place}\\, Astana`,
         'DESCRIPTION:Screen-free student creative session. Sample reminder\\, no seat booked.',
@@ -335,8 +433,8 @@
     OFFLINE.toast('Schedule downloaded as .ics calendar reminder!');
   };
 
-  /* ---------- Form Validation & Pass Creation ---------- */
-  const initPlannerForm = () => {
+  /* ---------- Sign Up & Log In Form Initialization ---------- */
+  const initAuthForms = () => {
     const { rules } = OFFLINE;
 
     OFFLINE.initForm(plannerForm, {
@@ -363,61 +461,153 @@
       consent: [rules.checked('Please tick the consent box to proceed.')],
     }, (values) => {
       const ids = OFFLINE.plan.getIds();
-      if (ids.length === 0) {
+      if (findConflicts(ids).length > 0) {
         goToStep(1);
-        OFFLINE.toast('Please select at least one gathering for your pass.');
+        OFFLINE.toast('Please remove overlapping evenings before saving your pass.');
         return false;
       }
 
+      const existingSession = OFFLINE.account.current();
+      const cleanEmail = values.email.trim().toLowerCase();
+      const isEditingSameEmail = Boolean(
+        existingSession && String(existingSession.email || '').toLowerCase() === cleanEmail
+      );
+
       const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-      const newPass = {
-        serial: `OFF-2026-${randomSuffix}`,
+      const profilePayload = {
+        serial: isEditingSameEmail && existingSession.serial ? existingSession.serial : `OFF-2026-${randomSuffix}`,
         name: values.name.trim(),
         email: values.email.trim(),
         phone: values.phone.trim(),
+        password: values.password,
         firstVisitDate: values.firstVisitDate,
         guests: Number(values.guests),
         firstTime: values.firstTime === 'yes',
         eveningIds: [...ids],
-        createdAt: new Date().toISOString(),
+        createdAt: isEditingSameEmail && existingSession.createdAt ? existingSession.createdAt : new Date().toISOString(),
       };
 
-      savePass(newPass);
-      renderPassCard(newPass);
-      OFFLINE.toast(`Welcome to OFFLINE, ${newPass.name}! Your pass is ready.`);
+      const result = OFFLINE.account.signUp(profilePayload, { allowUpdate: isEditingSameEmail });
+      if (result && result.ok === false) {
+        OFFLINE.showFormError(plannerForm, result.field || 'email', result.message);
+        const field = plannerForm.elements[result.field || 'email'];
+        if (field) field.focus();
+        return false;
+      }
+
+      updatePasswordStrength('');
+      renderPassCard(result);
+      goToStep(3);
+      OFFLINE.toast(
+        isEditingSameEmail
+          ? `Updated profile & pass for ${result.name}.`
+          : `Welcome to OFFLINE, ${result.name}! Your account and pass are ready.`
+      );
       return true;
     });
 
-    togglePwBtn.addEventListener('click', () => {
-      const isText = passwordInput.type === 'text';
-      passwordInput.type = isText ? 'password' : 'text';
-      togglePwBtn.textContent = isText ? 'Show' : 'Hide';
-      togglePwBtn.setAttribute('aria-pressed', String(!isText));
+    OFFLINE.initForm(loginForm, {
+      email: [rules.required('Enter your registered email address.'), rules.email()],
+      password: [rules.required('Enter your password.')],
+    }, (values) => {
+      const result = OFFLINE.account.logIn(values.email, values.password);
+      if (!result || !result.ok) {
+        const fieldName = (result && result.field) || 'password';
+        OFFLINE.showFormError(loginForm, fieldName, (result && result.message) || 'Could not log in.');
+        if (loginForm.elements[fieldName]) loginForm.elements[fieldName].focus();
+        return false;
+      }
+
+      refreshPlanViews();
+      renderPassCard(result.user);
+      goToStep(3);
+      OFFLINE.toast(`Welcome back, ${result.user.name}! Your pass is loaded.`);
+      return true;
     });
+
+    bindPasswordToggle(passwordInput, togglePwBtn);
+    bindPasswordToggle(loginPasswordInput, toggleLoginPwBtn);
 
     passwordInput.addEventListener('input', () => {
       updatePasswordStrength(passwordInput.value);
     });
   };
 
+  /* ---------- Cross-Page & Hash Routing ---------- */
+  const refreshPlanViews = () => {
+    renderEveningSelectors();
+    renderBasket();
+    const user = OFFLINE.account.current();
+    if (user) {
+      renderPassCard(user);
+    }
+  };
+
+  const applyHashRoute = ({ instant = false, focus = false } = {}) => {
+    const hash = window.location.hash.toLowerCase();
+    const user = OFFLINE.account.current();
+
+    if (hash === '#login') {
+      switchAuthTab('login');
+      goToStep(2, { instant, focus });
+      return true;
+    }
+    if (hash === '#signup') {
+      switchAuthTab('signup');
+      goToStep(2, { instant, focus });
+      return true;
+    }
+    if (hash === '#profile' || hash === '#pass-section') {
+      if (user) {
+        renderPassCard(user);
+        goToStep(3, { instant, focus });
+      } else {
+        switchAuthTab('login');
+        goToStep(2, { instant, focus });
+        OFFLINE.toast('Log in or sign up to view your Member Profile.');
+      }
+      return true;
+    }
+    return false;
+  };
+
   /* ---------- Page Init & Events ---------- */
   $(function () {
     const params = new URLSearchParams(window.location.search);
     const sessionParam = params.get('session');
-    if (sessionParam && OFFLINE.getGathering(sessionParam)) {
+    const hasSessionParam = Boolean(sessionParam && OFFLINE.getGathering(sessionParam));
+    if (hasSessionParam) {
       OFFLINE.plan.add(sessionParam);
     }
 
+    initAuthForms();
     refreshPlanViews();
-    initPlannerForm();
+    syncStep3TabState();
 
-    window.addEventListener('offline:plan-change', refreshPlanViews);
-
-    const savedPass = loadPass();
-    if (savedPass && savedPass.eveningIds && savedPass.eveningIds.length > 0 && !savedPass.loggedOut) {
-      renderPassCard(savedPass);
+    // Route initially based on hash, query param, or active member session
+    if (!applyHashRoute({ instant: true, focus: false })) {
+      const currentUser = OFFLINE.account.current();
+      if (currentUser && !hasSessionParam) {
+        renderPassCard(currentUser);
+        goToStep(3, { instant: true, focus: false });
+      } else {
+        goToStep(1, { instant: true, focus: false });
+      }
     }
 
+    window.addEventListener('hashchange', () => applyHashRoute({ instant: false, focus: true }));
+    window.addEventListener('offline:plan-change', refreshPlanViews);
+    window.addEventListener('offline:bookmarks-change', renderPassMeta);
+    window.addEventListener('offline:auth-change', (event) => {
+      syncStep3TabState();
+      const user = event.detail && event.detail.user;
+      if (!user && !isDeletingAccount && currentStep === 3) {
+        switchAuthTab('login');
+        goToStep(2);
+      }
+    });
+
+    // Step 1 filter pills & search
     filterButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         activeCategory = btn.dataset.planFilter || 'all';
@@ -443,18 +633,15 @@
       });
     }
 
+    // Step 1 grid & basket actions
     eveningsGrid.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-id]');
-      if (btn) {
-        OFFLINE.plan.toggle(btn.dataset.id);
-      }
+      if (btn) OFFLINE.plan.toggle(btn.dataset.id);
     });
 
     basketList.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-remove-basket-item');
-      if (btn) {
-        OFFLINE.plan.remove(btn.dataset.id);
-      }
+      if (btn) OFFLINE.plan.remove(btn.dataset.id);
     });
 
     btnClearBasket.addEventListener('click', () => {
@@ -462,31 +649,79 @@
       OFFLINE.toast('Your plan has been cleared.');
     });
 
-    btnStep1Next.addEventListener('click', () => goToStep(2));
-    tabStep1.addEventListener('click', () => goToStep(1));
-    tabStep2.addEventListener('click', () => goToStep(2));
+    // Wizard tab & step buttons
+    btnStep1Next.addEventListener('click', () => {
+      if (findConflicts(OFFLINE.plan.getIds()).length > 0) {
+        OFFLINE.toast('Please remove one of the overlapping evenings before continuing.');
+        return;
+      }
+      if (OFFLINE.account.current()) prefillSignupForm(OFFLINE.account.current());
+      switchAuthTab('signup');
+      goToStep(2);
+    });
+
+    if (wizardTabs[0]) wizardTabs[0].addEventListener('click', () => goToStep(1));
+    if (wizardTabs[1]) {
+      wizardTabs[1].addEventListener('click', () => {
+        if (OFFLINE.account.current()) prefillSignupForm(OFFLINE.account.current());
+        goToStep(2);
+      });
+    }
+    if (wizardTabs[2]) {
+      wizardTabs[2].addEventListener('click', () => {
+        const user = OFFLINE.account.current();
+        if (!user) return;
+        renderPassCard(user);
+        goToStep(3);
+      });
+    }
+
     btnBackToStep1.addEventListener('click', () => goToStep(1));
     btnCancelToStep1.addEventListener('click', () => goToStep(1));
+
+    // Auth switcher buttons
+    tabSignup.addEventListener('click', () => switchAuthTab('signup'));
+    tabLogin.addEventListener('click', () => switchAuthTab('login'));
+    btnSwitchToSignup.addEventListener('click', () => {
+      switchAuthTab('signup');
+      if (plannerForm.elements.name) plannerForm.elements.name.focus();
+    });
+
+    // Step 3 pass actions
+    passScheduleList.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-pass-remove]');
+      if (btn) {
+        OFFLINE.plan.remove(btn.dataset.passRemove);
+        OFFLINE.toast('Gathering removed from your schedule.');
+      }
+    });
 
     btnDownloadCalendar.addEventListener('click', downloadIcs);
 
     btnEditPass.addEventListener('click', () => {
-      passSection.hidden = true;
+      const user = OFFLINE.account.current();
+      if (user) prefillSignupForm(user);
       goToStep(1);
     });
 
+    btnLogoutPass.addEventListener('click', () => {
+      OFFLINE.account.logOut();
+      switchAuthTab('login');
+      goToStep(2);
+      OFFLINE.toast('Logged out. You can log back in anytime with your email and password.');
+    });
+
     btnDeletePass.addEventListener('click', () => {
-      removePass();
+      isDeletingAccount = true;
+      OFFLINE.account.deleteAccount();
+      isDeletingAccount = false;
       OFFLINE.plan.clear();
       plannerForm.reset();
+      loginForm.reset();
       updatePasswordStrength('');
-      if (tabStep3) tabStep3.disabled = true;
-
-      $(passSection).slideUp(OFFLINE.speed, () => {
-        passSection.hidden = true;
-        goToStep(1);
-      });
-      OFFLINE.toast('Your pass has been deleted.');
+      syncStep3TabState();
+      goToStep(1);
+      OFFLINE.toast('Your account and pass have been deleted.');
     });
   });
 }(window.jQuery, window.OFFLINE));
