@@ -1,8 +1,11 @@
 /* Home page: the "next evening" card with a countdown, and the "Which evening is yours?" quiz.
+ * Persists quiz results in localStorage ('offline-quiz-result-v1') and syncs with the cross-page plan basket.
  * Data: OFFLINE.gatherings (data/gatherings.js) and OFFLINE.quiz (data/quiz.js). */
 'use strict';
 
 (function ($, OFFLINE) {
+  const QUIZ_KEY = 'offline-quiz-result-v1';
+
   /* ---------- Next evening ---------- */
   const countdownText = (days) => {
     if (days === 0) return 'Tonight';
@@ -10,7 +13,6 @@
     return `In ${days} days`;
   };
 
-  // The soonest evening that is today or later and still has places.
   const findNextGathering = () => OFFLINE.gatherings.find((event) => OFFLINE.daysUntil(event.date) >= 0 && OFFLINE.seatsLeft(event) > 0);
 
   const renderNextGathering = () => {
@@ -30,6 +32,16 @@
     art.append(OFFLINE.el('span', { class: 'art-label', text: `${event.level} / ${event.category}` }));
 
     const places = OFFLINE.seatsLeft(event);
+    const inPlan = OFFLINE.plan.has(event.id);
+
+    const togglePlanBtn = OFFLINE.el('button', {
+      type: 'button',
+      class: `button ${inPlan ? 'button-outline' : ''}`,
+      'data-plan-toggle': event.id,
+      'aria-pressed': String(inPlan),
+      text: inPlan ? '✓ Saved in your plan' : '+ Save to my plan',
+    });
+
     const copy = OFFLINE.el('div', { class: 'next-copy' }, [
       OFFLINE.el('span', { class: 'tag', text: `${countdownText(OFFLINE.daysUntil(event.date))} · ${event.level} friendly` }),
       OFFLINE.el('h3', { text: event.title }),
@@ -39,17 +51,21 @@
         OFFLINE.el('span', { text: `${event.start}–${event.end}` }),
         OFFLINE.el('span', { text: `${event.place} · ${OFFLINE.plural(places, 'place')} left` }),
       ]),
-      OFFLINE.el('a', { class: 'button button-outline', href: `join.html?session=${event.id}` }, ['Make a plan ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+      OFFLINE.el('div', { class: 'd-flex flex-wrap gap-3 align-items-center mt-2' }, [
+        togglePlanBtn,
+        OFFLINE.el('a', { class: 'text-link', href: `join.html?session=${event.id}` }, ['Open planner ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+      ]),
     ]);
     card.replaceChildren(art, copy);
 
-    // A calculated summary: how many evenings are coming up and how many places are free in total.
     const upcoming = OFFLINE.gatherings.filter((item) => OFFLINE.daysUntil(item.date) >= 0);
     const freePlaces = upcoming.reduce((total, item) => total + OFFLINE.seatsLeft(item), 0);
+    const plannedCount = OFFLINE.plan.getIds().length;
     if (summary) {
       summary.replaceChildren(
         OFFLINE.el('span', {}, [OFFLINE.el('strong', { text: upcoming.length }), ' evenings coming up']),
         OFFLINE.el('span', {}, [OFFLINE.el('strong', { text: freePlaces }), ' places still free']),
+        OFFLINE.el('span', {}, [OFFLINE.el('strong', { text: plannedCount }), ' saved in your plan']),
       );
     }
   };
@@ -59,10 +75,9 @@
   const CATEGORY_ORDER = ['make', 'play', 'slow'];
 
   let questionIndex = 0;
-  let answers = []; // one category per answered question
-  let busy = false; // blocks clicks while a fade is running, so quick clicks never skip questions
+  let answers = [];
+  let busy = false;
 
-  // Percent of answers per category, e.g. { make: 50, play: 25, slow: 25 }.
   const scoreAnswers = () => {
     const counts = { make: 0, play: 0, slow: 0 };
     answers.forEach((category) => { counts[category] += 1; });
@@ -71,7 +86,6 @@
     return { counts, percents };
   };
 
-  // Highest count wins. On a tie, the category answered most recently wins.
   const pickWinner = (counts) => {
     const best = Math.max(...Object.values(counts));
     for (let i = answers.length - 1; i >= 0; i -= 1) {
@@ -80,7 +94,6 @@
     return CATEGORY_ORDER[0];
   };
 
-  // The soonest upcoming evening of a kind, preferring one that still has places.
   const recommendedEvening = (category) => {
     const matches = OFFLINE.gatherings.filter((event) => event.category === category && OFFLINE.daysUntil(event.date) >= 0);
     return matches.find((event) => OFFLINE.seatsLeft(event) > 0) || matches[0] || null;
@@ -120,42 +133,85 @@
     return form;
   };
 
-  const buildResult = () => {
-    const { counts, percents } = scoreAnswers();
-    const winner = pickWinner(counts);
-    const info = OFFLINE.quizResults[winner];
+  const buildResultView = (resultData, { isRestored = false } = {}) => {
+    const { winner, percents } = resultData;
+    const info = OFFLINE.quizResults[winner] || OFFLINE.quizResults.make;
     const event = recommendedEvening(winner);
 
     const scores = CATEGORY_ORDER.map((category) => {
+      const pct = Number(percents && percents[category]) || 0;
       const bar = OFFLINE.el('span', { class: 'quiz-score-bar' });
-      bar.dataset.width = percents[category];
+      bar.dataset.width = pct;
       return OFFLINE.el('li', { class: category === winner ? 'is-winner' : '' }, [
         OFFLINE.el('span', { class: 'quiz-score-label', text: OFFLINE.quizResults[category].label }),
         OFFLINE.el('span', { class: 'quiz-score-track' }, [bar]),
-        OFFLINE.el('span', { class: 'quiz-score-value', text: `${percents[category]}%` }),
+        OFFLINE.el('span', { class: 'quiz-score-value', text: `${pct}%` }),
       ]);
     });
 
+    const inPlan = event ? OFFLINE.plan.has(event.id) : false;
     const evening = event
       ? OFFLINE.el('div', { class: 'quiz-match' }, [
-        OFFLINE.el('p', { class: 'eyebrow', text: 'Your next evening' }),
+        OFFLINE.el('p', { class: 'eyebrow', text: 'Your matched evening' }),
         OFFLINE.el('h4', { text: event.title }),
         OFFLINE.el('p', { class: 'quiz-match-meta', text: `${OFFLINE.gatheringWhen(event)} · ${event.place} · ${OFFLINE.plural(OFFLINE.seatsLeft(event), 'place')} left` }),
-        OFFLINE.el('a', { class: 'button', href: `join.html?session=${event.id}` }, ['Make a plan ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+        OFFLINE.el('div', { class: 'd-flex flex-wrap gap-3 align-items-center' }, [
+          OFFLINE.el('button', {
+            type: 'button',
+            class: `button ${inPlan ? 'button-outline' : ''}`,
+            'data-quiz-plan-id': event.id,
+            'aria-pressed': String(inPlan),
+            text: inPlan ? '✓ Saved in your plan' : '+ Save evening to plan',
+          }),
+          OFFLINE.el('a', { class: 'text-link', href: `join.html?session=${event.id}` }, ['Open in planner ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+        ]),
       ])
       : OFFLINE.el('p', { text: 'No matching evening is open right now. Check the Gatherings page soon.' });
 
     return OFFLINE.el('div', { class: 'quiz-result' }, [
-      OFFLINE.el('span', { class: 'tag', text: `Result · ${info.label}` }),
+      OFFLINE.el('div', { class: 'd-flex flex-wrap justify-content-between align-items-center gap-2' }, [
+        OFFLINE.el('span', { class: 'tag', text: `Result · ${info.label}` }),
+        isRestored && OFFLINE.el('span', { class: 'meta', text: 'Saved on this device' }),
+      ]),
       OFFLINE.el('h3', { class: 'quiz-result-title', id: 'quiz-result-title', tabindex: '-1', text: info.title }),
       OFFLINE.el('p', { text: info.text }),
       OFFLINE.el('ul', { class: 'quiz-scores', 'aria-label': 'Your mix' }, scores),
       evening,
-      OFFLINE.el('button', { class: 'text-link quiz-restart', type: 'button', 'data-quiz-restart': true, text: 'Take the quiz again' }),
+      OFFLINE.el('div', { class: 'd-flex flex-wrap gap-3 align-items-center mt-2' }, [
+        OFFLINE.el('button', { class: 'text-link quiz-restart', type: 'button', 'data-quiz-restart': true, text: 'Take the quiz again' }),
+        OFFLINE.el('button', { class: 'text-link quiz-restart', type: 'button', 'data-quiz-clear': true, text: 'Clear saved result' }),
+      ]),
     ]);
   };
 
-  // Fade the current view out, swap it, fade the new one in. `busy` stays true until the fade-in ends.
+  const buildResult = () => {
+    const { counts, percents } = scoreAnswers();
+    const winner = pickWinner(counts);
+    const info = OFFLINE.quizResults[winner] || OFFLINE.quizResults.make;
+    const event = recommendedEvening(winner);
+    const payload = {
+      winner,
+      label: info.label,
+      title: info.title,
+      counts,
+      percents,
+      eventId: event ? event.id : null,
+      savedAt: new Date().toISOString(),
+    };
+    OFFLINE.storage.set(QUIZ_KEY, payload);
+    return buildResultView(payload, { isRestored: false });
+  };
+
+  const animateBars = () => {
+    $(stage).find('.quiz-score-bar').each(function () {
+      $(this).stop(true, false).css('width', 0).animate({ width: `${this.dataset.width}%` }, OFFLINE.speed * 3);
+    });
+    $(stage).find('.quiz-progress-bar').each(function () {
+      const target = this.style.width;
+      $(this).css('width', 0).animate({ width: target }, OFFLINE.speed * 2);
+    });
+  };
+
   const showView = (build, focusSelector) => {
     if (busy) return;
     busy = true;
@@ -165,14 +221,7 @@
         busy = false;
         const focusTarget = stage.querySelector(focusSelector);
         if (focusTarget) focusTarget.focus({ preventScroll: true });
-        // Result bars grow to their percentage with a short jQuery animation.
-        $(stage).find('.quiz-score-bar').each(function () {
-          $(this).stop(true, false).css('width', 0).animate({ width: `${this.dataset.width}%` }, OFFLINE.speed * 3);
-        });
-        $(stage).find('.quiz-progress-bar').each(function () {
-          const target = this.style.width;
-          $(this).css('width', 0).animate({ width: target }, OFFLINE.speed * 2);
-        });
+        animateBars();
       });
     });
   };
@@ -184,6 +233,12 @@
     questionIndex = 0;
     answers = [];
     showQuestion();
+  };
+
+  const clearSavedQuiz = () => {
+    OFFLINE.storage.remove(QUIZ_KEY);
+    OFFLINE.toast('Saved quiz result cleared.');
+    restart();
   };
 
   const submitAnswer = (event) => {
@@ -198,6 +253,7 @@
     answers[questionIndex] = chosen;
     if (questionIndex === OFFLINE.quiz.length - 1) {
       showResult();
+      OFFLINE.toast('Quiz match saved to this browser.');
     } else {
       questionIndex += 1;
       showQuestion();
@@ -212,12 +268,22 @@
     });
     stage.addEventListener('click', (event) => {
       if (event.target.closest('[data-quiz-restart]')) restart();
+      if (event.target.closest('[data-quiz-clear]')) clearSavedQuiz();
       if (event.target.closest('[data-quiz-back]') && !busy && questionIndex > 0) {
         questionIndex -= 1;
         showQuestion();
       }
+      const planBtn = event.target.closest('[data-quiz-plan-id]');
+      if (planBtn) {
+        const id = planBtn.dataset.quizPlanId;
+        const added = OFFLINE.plan.toggle(id);
+        planBtn.classList.toggle('button-outline', added);
+        planBtn.setAttribute('aria-pressed', String(added));
+        planBtn.textContent = added ? '✓ Saved in your plan' : '+ Save evening to plan';
+        renderNextGathering();
+        OFFLINE.toast(added ? 'Evening added to your plan!' : 'Evening removed from your plan.');
+      }
     });
-    // Keys 1-3 pick an answer, for visitors who prefer the keyboard.
     stage.addEventListener('keydown', (event) => {
       const radios = stage.querySelectorAll('.quiz-radio');
       const position = Number(event.key) - 1;
@@ -225,12 +291,29 @@
       radios[position].checked = true;
       radios[position].dispatchEvent(new Event('change', { bubbles: true }));
     });
-    stage.replaceChildren(buildQuestion());
+
+    const saved = OFFLINE.storage.get(QUIZ_KEY, null);
+    if (saved && saved.winner && OFFLINE.quizResults[saved.winner]) {
+      stage.replaceChildren(buildResultView(saved, { isRestored: true }));
+      animateBars();
+    } else {
+      stage.replaceChildren(buildQuestion());
+    }
   };
 
   $(function () {
     renderNextGathering();
     initQuiz();
+
+    const nextCard = document.querySelector('#next-gathering');
+    if (nextCard) {
+      nextCard.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-plan-toggle]');
+        if (!btn) return;
+        const added = OFFLINE.plan.toggle(btn.dataset.planToggle);
+        renderNextGathering();
+        OFFLINE.toast(added ? 'Evening saved to your plan!' : 'Evening removed from your plan.');
+      });
+    }
   });
 }(window.jQuery, window.OFFLINE));
-
