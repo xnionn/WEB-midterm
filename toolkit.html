@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,6 +18,7 @@
   <script src="assets/js/core.js" defer></script>
   <script src="assets/js/validation.js" defer></script>
   <script src="assets/js/data/supplies.js" defer></script>
+  <script src="assets/js/data/notes.js" defer></script>
   <script src="assets/js/pages/toolkit.js" defer></script>
   <noscript><style>.navbar-collapse.collapse{display:block}.navbar-toggler{display:none}.session-filters{display:none}</style></noscript>
 </head>
@@ -29,7 +30,11 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navigation" aria-controls="site-navigation" aria-expanded="false" aria-label="Toggle navigation"><span class="menu-lines" aria-hidden="true"></span><span>Menu</span></button>
       <div class="collapse navbar-collapse" id="site-navigation">
         <div class="navbar-nav nav-links"><a class="nav-link" href="index.html">Home</a><a class="nav-link" href="gatherings.html">Gatherings</a><a class="nav-link" href="about.html">The club</a><a class="nav-link" href="fieldnotes.html">Field notes</a><a class="nav-link active" href="toolkit.html" aria-current="page">The toolkit</a></div>
-        <a class="button button-small nav-join" href="join.html">Make a plan <span aria-hidden="true">↗</span></a>
+        <div class="nav-utilities">
+          <div class="nav-auth-area" id="nav-auth-area"><a class="nav-login-link" href="join.html#login">Log in</a></div>
+          <a class="button button-small nav-join" href="join.html">Make a plan <span class="nav-plan-badge" id="nav-plan-count" hidden>0</span> <span aria-hidden="true">↗</span></a>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark</span></button>
+        </div>
       </div>
     </nav>
   </header>
@@ -47,7 +52,7 @@
       <p class="meta" id="download-hint">Generated dynamically from your selected supplies · plain text</p>
       <p class="field-error" id="download-error" hidden></p>
     </div>
-    <div class="toolkit-cover" aria-label="Field kit 01: Twenty minutes, one sheet, no screen">
+    <div class="toolkit-cover" role="img" aria-label="Field kit 01: Twenty minutes, one sheet, no screen">
       <div class="cover-top"><span>OFFLINE</span><span>FIELD KIT / 01</span></div>
       <p class="cover-time">20<span>MIN</span></p>
       <div class="cover-fold" aria-hidden="true"><div></div><div></div><div></div><div></div></div>
@@ -85,10 +90,15 @@
       <button class="button button-outline print-kit-button" type="button" id="btn-print-guide">Print this guide <span aria-hidden="true">↗</span></button>
     </div>
 
-    <div class="printable-kit" aria-labelledby="guide-title">
+    <div class="printable-kit" role="region" aria-labelledby="guide-title">
       <div class="guide-heading">
-        <p class="eyebrow">OFFLINE / FIELD KIT 01</p>
-        <h2 id="guide-title">The four-panel pause.</h2>
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+          <div>
+            <p class="eyebrow">OFFLINE / FIELD KIT 01</p>
+            <h2 id="guide-title">The four-panel pause.</h2>
+          </div>
+          <img src="assets/images/four-panel-fold.svg" alt="Diagram showing a paper sheet folded into four numbered activity quadrants" width="124" height="80" class="feature-badge-img">
+        </div>
         <p>Fold your paper in half, then in half again. Unfold it: each of the four panels gets one small experiment.</p>
       </div>
 
@@ -100,7 +110,7 @@
         </div>
       </div>
 
-      <div class="gallery-indicators d-flex gap-2 mb-3" id="gallery-dots" role="tablist" aria-label="Activity panels"></div>
+      <div class="gallery-indicators d-flex gap-2 mb-3" id="gallery-dots" role="group" aria-label="Activity panels"></div>
 
       <ol class="kit-steps" id="gallery-steps">
         <li class="step-panel active" data-index="0" id="panel-0">
@@ -130,6 +140,18 @@
       </ol>
       <p class="guide-footer">There is no finished look to aim for. Four panels filled in your own way count as a good twenty minutes.</p>
     </div>
+  </section>
+
+  <section class="container section-space toolkit-saved-section" id="saved-notes-kit" aria-labelledby="saved-notes-kit-title">
+    <div class="section-heading-row">
+      <div>
+        <p class="eyebrow">Saved from the notebook</p>
+        <h2 id="saved-notes-kit-title" class="section-heading">Your saved field notes.</h2>
+      </div>
+      <p class="meta" id="toolkit-notes-summary" aria-live="polite">0 saved notes · 0 min reading time</p>
+    </div>
+    <p class="lead-copy mb-4">Prompts you bookmark on the <a class="text-link" href="fieldnotes.html">Field notes</a> page appear here automatically and are included when you download your custom guide.</p>
+    <div id="toolkit-saved-notes" aria-live="polite"></div>
   </section>
 
   <section class="container section-space kit-next" aria-labelledby="kit-next-title">

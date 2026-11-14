@@ -1,10 +1,13 @@
-/* Toolkit page: dynamic supply checklist, live readiness calculation,
- * animated progress bar, dynamically generated custom guide download,
+/* Toolkit page: dynamic supply checklist persisted in localStorage, live readiness calculation,
+ * animated progress bar, cross-page saved field notes reading list, dynamically generated custom guide download,
  * and a 4-panel interactive step gallery.
- * Data: OFFLINE.supplies (data/supplies.js). */
+ * Data: OFFLINE.supplies (data/supplies.js) and OFFLINE.notes (data/notes.js). */
 'use strict';
 
 (function ($, OFFLINE) {
+  const SUPPLIES_KEY = 'offline-supplies-v1';
+  const VISITOR_NOTES_KEY = 'offline-visitor-notes-v1';
+
   const checklistContainer = document.querySelector('#supplies-checklist');
   const statText = document.querySelector('#supplies-stat');
   const timeText = document.querySelector('#supplies-time');
@@ -17,6 +20,10 @@
   const downloadError = document.querySelector('#download-error');
   const btnPrintGuide = document.querySelector('#btn-print-guide');
 
+  // Saved Field Notes container on Toolkit page
+  const savedNotesBox = document.querySelector('#toolkit-saved-notes');
+  const savedNotesSummary = document.querySelector('#toolkit-notes-summary');
+
   // Gallery elements
   const stepsContainer = document.querySelector('#gallery-steps');
   const panels = document.querySelectorAll('.step-panel');
@@ -28,8 +35,20 @@
   let currentPanelIndex = 0;
   let isGalleryBusy = false;
 
+  /* ---------- Supplies Storage Helpers ---------- */
+  const getSavedSupplyIds = () => {
+    const stored = OFFLINE.storage.get(SUPPLIES_KEY, null);
+    if (Array.isArray(stored)) return stored;
+    return OFFLINE.supplies.filter((s) => s.required).map((s) => s.id);
+  };
+
+  const saveSupplyIds = (ids) => {
+    OFFLINE.storage.set(SUPPLIES_KEY, ids);
+  };
+
   /* ---------- Render Supplies Checklist with DOM ---------- */
   const renderSupplies = () => {
+    const checkedIds = new Set(getSavedSupplyIds());
     checklistContainer.replaceChildren();
 
     OFFLINE.supplies.forEach((item) => {
@@ -41,10 +60,7 @@
         'data-id': item.id,
       });
 
-      // Default check the required ones for smooth onboarding
-      if (item.required) {
-        input.checked = true;
-      }
+      input.checked = checkedIds.has(item.id);
 
       const label = OFFLINE.el('label', {
         class: 'form-check-label d-flex flex-column',
@@ -61,11 +77,11 @@
       checklistContainer.append(wrapper);
     });
 
-    updateReadiness();
+    updateReadiness({ persist: false });
   };
 
   /* ---------- Calculate & Animate Readiness ---------- */
-  const updateReadiness = () => {
+  const updateReadiness = ({ persist = true } = {}) => {
     const checkboxes = checklistContainer.querySelectorAll('.supply-checkbox');
     const checked = [];
 
@@ -76,12 +92,15 @@
       }
     });
 
+    if (persist) {
+      saveSupplyIds(checked.map((item) => item.id));
+    }
+
     const total = OFFLINE.supplies.length;
     const requiredItems = OFFLINE.supplies.filter((s) => s.required);
     const missingRequired = requiredItems.filter((req) => !checked.some((c) => c.id === req.id));
     const totalMinutes = checked.reduce((sum, item) => sum + item.minutes, 0);
 
-    // Percentage based on required (60%) and optional (40%)
     let pct = 0;
     if (requiredItems.length > 0) {
       const reqChecked = requiredItems.length - missingRequired.length;
@@ -92,11 +111,9 @@
     statText.textContent = `${checked.length} of ${total} ready`;
     timeText.textContent = `${totalMinutes} min setup`;
 
-    // jQuery animate progress bar width
     $(progressBar).stop(true, false).animate({ width: `${pct}%` }, OFFLINE.speed * 2);
     progressBar.parentElement.setAttribute('aria-valuenow', pct);
 
-    // Status message
     if (checked.length === 0) {
       statusNote.textContent = 'Select your supplies below to prepare your space.';
       statusNote.className = 'supply-status-note';
@@ -112,6 +129,72 @@
       downloadError.hidden = true;
       downloadError.textContent = '';
     }
+  };
+
+  /* ---------- Cross-Page Saved Field Notes on Toolkit ---------- */
+  const getSavedNotesObjects = () => {
+    const visitorNotes = OFFLINE.storage.get(VISITOR_NOTES_KEY, []);
+    const allNotes = [
+      ...(Array.isArray(visitorNotes) ? visitorNotes : []),
+      ...(Array.isArray(OFFLINE.notes) ? OFFLINE.notes : []),
+    ];
+    const ids = OFFLINE.bookmarks.getIds();
+    return ids.map((id) => allNotes.find((n) => n.id === id)).filter(Boolean);
+  };
+
+  const renderSavedFieldNotes = () => {
+    if (!savedNotesBox) return;
+    const saved = getSavedNotesObjects();
+    savedNotesBox.replaceChildren();
+
+    const totalMinutes = saved.reduce((sum, n) => sum + (Number(n.minutes) || 1), 0);
+    if (savedNotesSummary) {
+      savedNotesSummary.replaceChildren(
+        OFFLINE.el('span', {}, [OFFLINE.el('strong', { text: saved.length }), ` saved ${saved.length === 1 ? 'note' : 'notes'}`]),
+        OFFLINE.el('span', {}, [OFFLINE.el('strong', { text: `${totalMinutes} min` }), ' total reading time']),
+      );
+    }
+
+    if (saved.length === 0) {
+      savedNotesBox.append(OFFLINE.el('div', { class: 'empty-state' }, [
+        OFFLINE.el('h3', { text: 'No saved field notes yet.' }),
+        OFFLINE.el('p', { text: 'Bookmark any observation on the Field notes page to keep its creative prompt here in your desk toolkit.' }),
+        OFFLINE.el('a', { class: 'button button-outline', href: 'fieldnotes.html#notes-archive' }, ['Browse Field notes ', OFFLINE.el('span', { 'aria-hidden': 'true', text: '↗' })]),
+      ]));
+      return;
+    }
+
+    const toolbar = OFFLINE.el('div', { class: 'd-flex justify-content-between align-items-center mb-3 flex-wrap gap-2' }, [
+      OFFLINE.el('p', { class: 'meta m-0', text: 'Included automatically when you download your custom guide.' }),
+      OFFLINE.el('button', {
+        type: 'button',
+        class: 'button button-small button-outline',
+        id: 'btn-clear-saved-notes',
+        text: 'Clear saved notes',
+      }),
+    ]);
+
+    const grid = OFFLINE.el('div', { class: 'toolkit-saved-grid' });
+    saved.forEach((note) => {
+      const card = OFFLINE.el('article', { class: 'toolkit-saved-card' }, [
+        OFFLINE.el('div', { class: 'd-flex justify-content-between align-items-center mb-2 gap-2' }, [
+          OFFLINE.el('span', { class: 'tag', text: `${note.tag} · ${note.minutes} min` }),
+          OFFLINE.el('button', {
+            type: 'button',
+            class: 'btn-delete-note',
+            'data-remove-saved-note': note.id,
+            'aria-label': `Remove ${note.title} from saved notes`,
+            text: '× Remove',
+          }),
+        ]),
+        OFFLINE.el('h3', { class: 'h5 mb-2', text: note.title }),
+        note.prompt && OFFLINE.el('p', { class: 'note-card-prompt mb-2', text: `Prompt: ${note.prompt}` }),
+        OFFLINE.el('span', { class: 'meta', text: `By ${note.author}` }),
+      ]);
+      grid.append(card);
+    });
+
+    savedNotesBox.append(toolbar, grid);
   };
 
   /* ---------- Dynamic Custom Guide Download ---------- */
@@ -133,6 +216,8 @@
       if (item) selected.push(item);
     });
 
+    const savedNotes = getSavedNotesObjects();
+
     const lines = [
       '==================================================',
       '           OFFLINE CLUB · FIELD KIT 01           ',
@@ -151,6 +236,19 @@
       lines.push(` [✓] 0${idx + 1}. ${item.name} (${item.category}, ~${item.minutes} min)`);
       lines.push(`      Note: ${item.hint}`);
     });
+
+    if (savedNotes.length > 0) {
+      lines.push(
+        '',
+        '--------------------------------------------------',
+        `YOUR SAVED FIELD NOTES PROMPTS (${savedNotes.length})`,
+        '--------------------------------------------------'
+      );
+      savedNotes.forEach((note, idx) => {
+        lines.push(` 0${idx + 1}. ${note.title} (by ${note.author})`);
+        if (note.prompt) lines.push(`     Try it: ${note.prompt}`);
+      });
+    }
 
     lines.push(
       '',
@@ -190,7 +288,6 @@
 
   /* ---------- Interactive Gallery (Four-Panel Pause) ---------- */
   const initGallery = () => {
-    // Generate dot indicators
     dotsContainer.replaceChildren();
     panels.forEach((_, idx) => {
       const dot = OFFLINE.el('button', {
@@ -198,6 +295,7 @@
         class: `gallery-dot ${idx === 0 ? 'active' : ''}`,
         'data-index': idx,
         'aria-label': `Go to panel ${idx + 1}`,
+        'aria-pressed': String(idx === 0),
       });
       dotsContainer.append(dot);
     });
@@ -221,7 +319,6 @@
       }
     });
 
-    // Keyboard navigation
     stepsContainer.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') {
         btnNext.click();
@@ -238,10 +335,9 @@
     currentPanelIndex = index;
     counterEl.textContent = `Panel ${index + 1} of ${panels.length}`;
 
-    // Update dots
     dotsContainer.querySelectorAll('.gallery-dot').forEach((dot, idx) => {
       dot.classList.toggle('active', idx === index);
-      dot.setAttribute('aria-current', String(idx === index));
+      dot.setAttribute('aria-pressed', String(idx === index));
     });
 
     const activePanel = panels[index];
@@ -254,7 +350,6 @@
       return;
     }
 
-    // jQuery effect: smooth panel fade transition
     const $active = $(activePanel);
     const $others = $(panels).not($active);
 
@@ -267,11 +362,12 @@
   /* ---------- Page Init ---------- */
   $(function () {
     renderSupplies();
+    renderSavedFieldNotes();
     initGallery();
 
     checklistContainer.addEventListener('change', (e) => {
       if (e.target.classList.contains('supply-checkbox')) {
-        updateReadiness();
+        updateReadiness({ persist: true });
       }
     });
 
@@ -280,15 +376,34 @@
         const item = OFFLINE.supplies.find((s) => s.id === cb.dataset.id);
         if (item && item.required) cb.checked = true;
       });
-      updateReadiness();
+      updateReadiness({ persist: true });
+      OFFLINE.toast('Required supplies selected and saved.');
     });
 
     btnClearSupplies.addEventListener('click', () => {
       checklistContainer.querySelectorAll('.supply-checkbox').forEach((cb) => {
         cb.checked = false;
       });
-      updateReadiness();
+      updateReadiness({ persist: true });
+      OFFLINE.toast('Supplies checklist cleared.');
     });
+
+    if (savedNotesBox) {
+      savedNotesBox.addEventListener('click', (e) => {
+        const removeBtn = e.target.closest('[data-remove-saved-note]');
+        if (removeBtn) {
+          OFFLINE.bookmarks.remove(removeBtn.dataset.removeSavedNote);
+          renderSavedFieldNotes();
+          OFFLINE.toast('Note removed from your Toolkit reading list.');
+          return;
+        }
+        if (e.target.closest('#btn-clear-saved-notes')) {
+          OFFLINE.bookmarks.clear();
+          renderSavedFieldNotes();
+          OFFLINE.toast('Saved notes reading list cleared.');
+        }
+      });
+    }
 
     btnDownloadKit.addEventListener('click', downloadCustomGuide);
 
