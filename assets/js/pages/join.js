@@ -433,9 +433,18 @@
     OFFLINE.toast('Schedule downloaded as .ics calendar reminder!');
   };
 
+  const setDefaultVisitDate = () => {
+    const input = plannerForm?.elements?.firstVisitDate;
+    if (!input || input.value) return;
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    input.value = tomorrow.toISOString().slice(0, 10);
+  };
+
   /* ---------- Sign Up & Log In Form Initialization ---------- */
   const initAuthForms = () => {
     const { rules } = OFFLINE;
+    setDefaultVisitDate();
 
     OFFLINE.initForm(plannerForm, {
       name: [rules.required('Please enter your name or nickname.'), rules.personName(), rules.minLength(2)],
@@ -461,6 +470,11 @@
       consent: [rules.checked('Please tick the consent box to proceed.')],
     }, (values) => {
       const ids = OFFLINE.plan.getIds();
+      if (ids.length === 0) {
+        goToStep(1);
+        OFFLINE.toast('Please add at least one evening to your plan before creating a pass.');
+        return false;
+      }
       if (findConflicts(ids).length > 0) {
         goToStep(1);
         OFFLINE.toast('Please remove overlapping evenings before saving your pass.');
@@ -717,6 +731,7 @@
       isDeletingAccount = false;
       OFFLINE.plan.clear();
       plannerForm.reset();
+      setDefaultVisitDate();
       loginForm.reset();
       updatePasswordStrength('');
       syncStep3TabState();
